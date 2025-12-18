@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+  <meta charset="UTF-8">
+  <title th:text="${review.title}">고객 후기 상세</title>
+
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+
+  <style>
+    .review-view-container {
+        width: 85%;
+        max-width: 900px;
+        margin: 50px auto 80px;
+        background: #fff;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        padding: 35px 40px;
+    }
+
+    .review-view-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: #222;
+    }
+
+    .review-view-meta {
+        font-size: 15px;
+        color: #777;
+        margin-bottom: 30px;
+    }
+
+    .review-view-image {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .review-view-image img {
+        max-width: 360px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .review-view-content {
+        font-size: 16px;
+        color: #333;
+        line-height: 1.75;
+        white-space: pre-line;
+        margin-bottom: 35px;
+    }
+
+    .review-back-btn {
+        display: inline-block;
+        font-weight: 600;
+        color: #0c6efd;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+
+  <div class="review-view-container">
+
+    <div class="review-view-title" th:text="${review.title}"></div>
+
+    <div class="review-view-meta">
+      <span th:text="${review.writerName}"></span> ・
+      <span th:text="${review.rating + '점'}"></span> ・
+      <span th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd')}"></span>
+    </div>
+
+    <div class="review-view-image" th:if="${review.imagePath}">
+      <img th:src="@{'/upload/review/' + ${review.imagePath}}" />
+    </div>
+
+    <div class="review-view-content" th:text="${review.content}"></div>
+
+    <a th:href="@{/review/list}" class="review-back-btn">← 목록으로 돌아가기</a>
+
+  </div>
+
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

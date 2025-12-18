@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트 - 센서 쇼핑몰</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/dbShop.css}">
+</head>
+<body>
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>센서 제품 목록</h2>
+        </div>
+    </section>
+    <div class="sub-content-container">
+        <form th:action="@{/dbShop/dbShopList}" method="get" class="shop-search-bar" id="searchForm">
+            <div class="category-checkbox-group">
+                <span style="font-weight: bold; margin-right: 10px;">카테고리:</span>
+                <label th:each="cat : ${T(com.example.springGroupBA.constant.DbProductCategory).values()}" class="category-label">
+                    <input type="checkbox" name="category"
+                           th:value="${cat}"
+                           th:checked="${categories != null and #lists.contains(categories, cat)}"
+                           onchange="this.form.submit()">
+                    <span th:text="${cat.description}"></span>
+                </label>
+            </div>
+            <div class="search-inputs">
+                <input type="text" name="keyword" th:value="${pageRequestDTO.keyword}" placeholder="상품명 또는 모델명 검색">
+                <button type="submit" class="btn-search">검색</button>
+            </div>
+        </form>
+        <div class="shop-grid">
+            <div class="product-card" th:each="dto : ${result.dtoList}"
+                 th:classappend="${dto.deleted or dto.stock <= 0} ? 'soldout-item' : ''">
+                <a th:href="${dto.deleted or dto.stock <= 0} ? 'javascript:alert(\'품절 또는 판매가 중지된 상품입니다.\')' : @{/dbShop/dbProductContent(id=${dto.id})}"
+                   class="product-link">
+                    <div class="product-img">
+                        <div class="soldout-mask" th:if="${dto.deleted or dto.stock <= 0}">
+                            <span class="soldout-text">품절</span>
+                        </div>
+                        <img th:if="${dto.mainImage != null}" th:src="@{'/upload/shop/' + ${dto.mainImage}}" alt="상품이미지">
+                        <span th:unless="${dto.mainImage != null}" style="color:#ccc;">No Image</span>
+                    </div>
+                    <div class="product-info">
+                        <span class="product-cat" th:text="${dto.categoryDes}">카테고리</span>
+                        <h3 class="product-name" th:text="${dto.name}">상품명</h3>
+                        <div class="product-model" th:text="${dto.modelName}">모델명</div>
+                        <div class="product-price" th:if="${!dto.deleted and dto.stock > 0}"
+                             th:text="|${#numbers.formatInteger(dto.price, 0, 'COMMA')}원|">0원</div>
+                        <div class="product-price" th:if="${dto.deleted or dto.stock <= 0}"
+                             style="text-decoration: line-through; color:#999;">
+                            [[|${#numbers.formatInteger(dto.price, 0, 'COMMA')}원|]]
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div th:if="${result.dtoList == null || result.dtoList.isEmpty()}" style="text-align: center; padding: 50px; color: #999;">
+            조건에 맞는 상품이 없습니다.
+        </div>
+        <div class="pds-pagination" th:if="${result.totalPage > 0}" style="margin-top: 40px;">
+            <ul>
+                <li th:if="${result.prev}">
+                    <a th:href="@{/dbShop/dbShopList(page=${result.start - 1}, category=${categories}, keyword=${pageRequestDTO.keyword})}">&lt;</a>
+                </li>
+                <li th:each="pageNum : ${result.pageList}" th:classappend="${result.page == pageNum} ? 'active'">
+                    <a th:href="@{/dbShop/dbShopList(page=${pageNum}, category=${categories}, keyword=${pageRequestDTO.keyword})}"
+                       th:text="${pageNum}"></a>
+                </li>
+                <li th:if="${result.next}">
+                    <a th:href="@{/dbShop/dbShopList(page=${result.end + 1}, category=${categories}, keyword=${pageRequestDTO.keyword})}">&gt;</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+<th:block th:replace="~{include/messageScript :: alertFragment}"></th:block>
+</body>
+</html>

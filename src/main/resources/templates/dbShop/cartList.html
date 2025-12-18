@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>장바구니</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/dbShop.css}">
+    <style>
+        .cart-table { width: 100%; border-collapse: separate; border-spacing: 0; border-top: 1px solid #ccc; margin-top: 0; }
+        .cart-table th { background: #f9f9f9; padding: 18px 0; font-size: 0.95rem; color: #555; border-bottom: 1px solid #ddd; font-weight: 600; }
+        .cart-table td { padding: 20px 10px; text-align: center; vertical-align: middle; border-bottom: 1px solid #eee; font-size: 1rem; color: #333; }
+        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #222; vertical-align: middle; }
+        .cart-img-box { width: 90px; height: 90px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: #fdfdfd; }
+        .cart-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .cart-img:hover { transform: scale(1.05); }
+        .product-link { font-size: 1.1rem; font-weight: 700; color: #333; text-decoration: none; display: block; text-align: left; padding-left: 10px; transition: color 0.2s; }
+        .product-link:hover { color: #007bff; text-decoration: underline; }
+        .qty-box { display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; width: 110px; margin: 0 auto; background: #fff; }
+        .btn-qty { width: 32px; height: 32px; border: none; background: #fff; cursor: pointer; font-size: 1.2rem; color: #555; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-qty:hover { background: #f5f5f5; color: #000; }
+        .input-qty { width: 46px; height: 32px; border: none; border-left: 1px solid #eee; border-right: 1px solid #eee; text-align: center; font-size: 1rem; font-weight: 600; outline: none; -moz-appearance: textfield; color: #333; }
+        .input-qty::-webkit-outer-spin-button, .input-qty::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .btn-delete-item { background: #fff; border: 1px solid #ddd; color: #888; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+        .btn-delete-item:hover { border-color: #aaa; color: #333; }
+        .cart-summary-card { margin-top: 40px; padding: 40px; background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); display: flex; justify-content: flex-end; align-items: center; gap: 40px; }
+        .summary-item { text-align: right; }
+        .summary-title { font-size: 0.95rem; color: #777; margin-bottom: 5px; display: block; }
+        .summary-value { font-size: 1.3rem; font-weight: 700; color: #333; }
+        .summary-divider { width: 1px; height: 40px; background: #eee; }
+        .total-price-group .summary-value { color: #dc3545; font-size: 2rem; }
+        .cart-action-group { display: flex; gap: 15px; justify-content: center; margin-top: 30px; padding-bottom: 50px; }
+        .btn-continue { display: inline-block; background: #fff; color: #555; border: 1px solid #ddd; padding: 18px 50px; font-size: 1.1rem; font-weight: 600; text-decoration: none; border-radius: 5px; transition: 0.3s; }
+        .btn-continue:hover { background: #f8f8f8; border-color: #bbb; color: #333; }
+        .btn-order-all { display: inline-block; background: #222; color: white; padding: 18px 80px; font-size: 1.2rem; font-weight: 700; text-decoration: none; border-radius: 5px; border:none; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .btn-order-all:hover { background: #444; transform: translateY(-2px); }
+        .empty-cart { padding: 100px 0; text-align: center; color: #999; }
+        .empty-icon { font-size: 4rem; margin-bottom: 20px; display: block; opacity: 0.5; }
+        .price-text { font-family: 'Roboto', sans-serif; letter-spacing: -0.5px; }
+        .page-title { font-size: 2rem; font-weight: 700; color: #333; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #333; }
+    </style>
+</head>
+<body>
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+    <div class="sub-content-container">
+        <h2 class="page-title">장바구니</h2>
+        <form id="orderForm" th:action="@{/order/checkout}" method="post" onsubmit="return checkSelection()">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <table class="cart-table">
+                <colgroup>
+                    <col width="5%"><col width="12%"><col width="auto"><col width="12%"><col width="15%"><col width="12%"><col width="10%">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th><input type="checkbox" id="checkAll" checked onchange="toggleAll(this)"></th>
+                    <th>이미지</th>
+                    <th style="text-align: left; padding-left: 20px;">상품정보</th>
+                    <th>판매가</th>
+                    <th>수량</th>
+                    <th>합계</th>
+                    <th>선택</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${cartList.isEmpty()}">
+                    <td colspan="7" class="empty-cart">
+                        <span class="empty-icon">🛒</span>
+                        <p>장바구니에 담긴 상품이 없습니다.</p>
+                    </td>
+                </tr>
+                <tr th:each="item : ${cartList}">
+                    <td>
+                        <input type="checkbox" name="cartItemIds" class="cart-chk"
+                               th:id="'chk_' + ${item.cartItemId}"
+                               th:value="${item.cartItemId}"
+                               th:data-price="${item.totalPrice}"
+                               th:data-name="${item.name}"
+                               checked
+                               onchange="updateTotal()">
+                    </td>
+                    <td>
+                        <div class="cart-img-box">
+                            <img th:if="${item.mainImage != null}" th:src="@{'/upload/shop/' + ${item.mainImage}}" class="cart-img">
+                            <span th:unless="${item.mainImage != null}" style="font-size:0.8rem; color:#ccc;">No Img</span>
+                        </div>
+                    </td>
+                    <td>
+                        <a th:href="@{/dbShop/dbProductContent(id=${item.productId})}" th:text="${item.name}" class="product-link">상품명</a>
+                    </td>
+                    <td class="price-text" th:text="${#numbers.formatInteger(item.price, 0, 'COMMA') + '원'}">0원</td>
+                    <td>
+                        <div class="qty-box">
+                            <button type="button" class="btn-qty" th:onclick="'changeQuantity(' + ${item.cartItemId} + ', -1)'">-</button>
+                            <input type="number" class="input-qty" th:id="'count_' + ${item.cartItemId}" th:value="${item.count}" th:data-unit-price="${item.price}" th:onchange="'changeQuantityInput(' + ${item.cartItemId} + ')'" min="1">
+                            <button type="button" class="btn-qty" th:onclick="'changeQuantity(' + ${item.cartItemId} + ', 1)'">+</button>
+                        </div>
+                    </td>
+                    <td>
+                        <span th:id="'itemTotalPrice_' + ${item.cartItemId}" class="price-text" style="font-weight: 800;" th:text="${#numbers.formatInteger(item.totalPrice, 0, 'COMMA') + '원'}">0원</span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn-delete-item" th:onclick="'deleteCartItem(' + ${item.cartItemId} + ')'">삭제</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="cart-summary-card" th:if="${!cartList.isEmpty()}">
+                <div class="summary-item">
+                    <span class="summary-title">총 상품수</span>
+                    <span id="totalCountDisplay" class="summary-value">0</span>
+                    <span style="font-size:1rem; color:#555;">개</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-item total-price-group">
+                    <span class="summary-title">결제 예정 금액</span>
+                    <span id="totalPriceDisplay" class="summary-value">0</span>
+                    <span style="font-size:1.3rem; font-weight:700; color:#dc3545;">원</span>
+                </div>
+            </div>
+            <div class="cart-action-group">
+                <a th:href="@{/dbShop/dbShopList}" class="btn-continue">쇼핑 계속하기</a>
+                <button type="submit" class="btn-order-all" th:if="${!cartList.isEmpty()}">주문하기</button>
+            </div>
+        </form>
+        <form id="deleteForm" th:action="@{/cart/delete}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <input type="hidden" name="cartItemId" id="deleteItemId">
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const contextPath = /*[[@{/}]]*/ "/";
+    /*]]>*/
+
+    window.onload = function() { updateTotal(); };
+
+    function toggleAll(source) {
+        const checkboxes = document.querySelectorAll('.cart-chk');
+        checkboxes.forEach(cb => { cb.checked = source.checked; });
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const checkboxes = document.querySelectorAll('.cart-chk:checked');
+        let totalPrice = 0;
+        let totalCount = 0;
+        checkboxes.forEach(cb => {
+            const price = parseInt(cb.getAttribute('data-price')) || 0;
+            totalPrice += price;
+            totalCount++;
+        });
+        document.getElementById('totalPriceDisplay').innerText = comma(totalPrice);
+        document.getElementById('totalCountDisplay').innerText = totalCount;
+        const allCheckboxes = document.querySelectorAll('.cart-chk');
+        const checkAll = document.getElementById('checkAll');
+        if(allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length) {
+            checkAll.checked = true;
+        } else {
+            if(allCheckboxes.length > 0) checkAll.checked = false;
+        }
+    }
+
+    function checkSelection() {
+        const checked = document.querySelectorAll('.cart-chk:checked');
+        if (checked.length === 0) {
+            alert("주문할 상품을 최소 1개 이상 선택해주세요.");
+            return false;
+        }
+        return true;
+    }
+
+    function deleteCartItem(id) {
+        if(confirm('장바구니에서 삭제하시겠습니까?')) {
+            document.getElementById('deleteItemId').value = id;
+            document.getElementById('deleteForm').submit();
+        }
+    }
+
+    function changeQuantity(id, change) {
+        const input = document.getElementById('count_' + id);
+        let currentVal = parseInt(input.value) || 1;
+        let newVal = currentVal + change;
+        if(newVal < 1) { alert("최소 수량은 1개입니다."); return; }
+        updateServerQuantity(id, newVal);
+    }
+
+    function changeQuantityInput(id) {
+        const input = document.getElementById('count_' + id);
+        let newVal = parseInt(input.value) || 1;
+        if(newVal < 1) { alert("최소 수량은 1개입니다."); newVal = 1; input.value = 1; }
+        updateServerQuantity(id, newVal);
+    }
+
+    function updateServerQuantity(cartItemId, count) {
+        const csrfToken = document.querySelector('input[name="_csrf"]').value;
+        const formData = new URLSearchParams();
+        formData.append('cartItemId', cartItemId);
+        formData.append('count', count);
+        formData.append('_csrf', csrfToken);
+
+        fetch(contextPath + 'cart/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        }).then(response => {
+            if (response.ok || response.redirected) {
+                const input = document.getElementById('count_' + cartItemId);
+                input.value = count;
+                const unitPrice = parseInt(input.getAttribute('data-unit-price'));
+                const newTotalPrice = unitPrice * count;
+                document.getElementById('itemTotalPrice_' + cartItemId).innerText = comma(newTotalPrice) + '원';
+                const checkbox = document.getElementById('chk_' + cartItemId);
+                checkbox.setAttribute('data-price', newTotalPrice);
+                updateTotal();
+            } else {
+                alert("수량 변경에 실패했습니다.");
+                location.reload();
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert("서버 통신 중 오류가 발생했습니다.");
+        });
+    }
+
+    function comma(str) {
+        str = String(str);
+        return str.replace(/(\d)(?=(?:\d{3})+(?!\d))/g, '$1,');
+    }
+</script>
+</body>
+</html>

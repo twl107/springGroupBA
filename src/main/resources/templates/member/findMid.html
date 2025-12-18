@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>아이디 찾기</title>
+
+  <!-- 공통 Bootstrap -->
+  <th:block th:insert="~{include/bs5}"></th:block>
+
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Noto Sans KR', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .page-card {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 450px;
+    }
+
+    h2 {
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      border-radius: 10px;
+      height: 45px;
+    }
+
+    .btn {
+      border-radius: 10px;
+      height: 45px;
+      font-weight: 600;
+    }
+
+    #timeLimitFindId {
+      font-weight: 700;
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    var ctx = /*[[@{/}]]*/ '/';
+
+    $(document).ready(function() {
+      const token = $("meta[name='_csrf']").attr("content");
+      const header = $("meta[name='_csrf_header']").attr("content");
+
+      let intervalFindId;  // 타이머
+      let timeLeft = 180;  // 3분
+
+      function startFindIdTimer(duration = 180) {
+          clearInterval(intervalFindId);
+          timeLeft = duration;
+
+          intervalFindId = setInterval(() => {
+              $('#timeLimitFindId').text(`남은시간: ${timeLeft}초`);
+              if (timeLeft <= 0) {
+                  clearInterval(intervalFindId);
+                  $.post(ctx + 'member/memberEmailCheckNo')
+                      .done(() => alert('인증시간 만료'))
+                      .fail(() => alert('서버 오류로 인증코드 삭제 실패'));
+                  $('#authEmail').val('');
+                  $('#authCode').val('');
+                  $('#authForm').addClass('d-none');
+                  $('#idList').empty();
+                  $('#timeLimitFindId').text('');
+              }
+              timeLeft--;
+          }, 1000);
+      }
+
+      // 아이디 찾기
+      $("#findIdForm").submit(function(e) {
+        e.preventDefault();
+
+        const email = $("#email").val();
+        const tel = $("#tel").val();
+
+        $.ajax({
+            url: ctx + "member/findMid",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ email: email, tel: tel }),
+            beforeSend: xhr => xhr.setRequestHeader(header, token),
+            success: function(response) {
+                $("#idList").empty();
+                const ids = response.memberIds || [];
+                if (ids.length === 0) {
+                    $("#idList").append('<li class="list-group-item text-center">등록된 계정이 없습니다.</li>');
+                } else {
+                    ids.forEach(id => $("#idList").append('<li class="list-group-item text-center">' + id + '</li>'));
+                }
+                new bootstrap.Modal(document.getElementById('idModal')).show();
+            },
+            error: function() {
+                alert("조회 중 오류가 발생했습니다.");
+            }
+        });
+      });
+
+      // 전체 보기 클릭
+      $("#viewAllBtn").click(function() {
+          $("#authForm").removeClass("d-none");
+          $("#idList").empty();
+      });
+
+      // 인증코드 발송
+      $("#sendCodeBtn").click(function() {
+          const email = $("#authEmail").val();
+          if (!email) return alert("이메일을 입력해주세요");
+
+          const $btn = $(this);
+          const $spinner = $("#sendCodeSpinner");
+          const $text = $("#sendCodeText");
+
+          $spinner.removeClass("d-none");
+          $text.text("발송 중...");
+
+          $.ajax({
+              url: ctx + "member/findMid/sendCode",
+              type: "POST",
+              data: { email },
+              beforeSend: xhr => xhr.setRequestHeader(header, token),
+              success: function(response) {
+                  alert(response.message);
+                  $("#verifyBtn").prop("disabled", false);
+                  startFindIdTimer(180);  // 타이머 시작
+              },
+              error: function(xhr) {
+                  alert(xhr.responseJSON?.message || "이메일 발송 실패");
+              },
+              complete: function() {
+                  $spinner.addClass("d-none");
+                  $text.text("인증코드 발송");
+              }
+          });
+      });
+
+      // 인증 확인
+      $("#verifyBtn").click(function() {
+          const email = $("#authEmail").val();
+          const code = $("#authCode").val();
+          if (!email || !code) return alert("이메일과 인증코드를 입력해주세요");
+
+          $.ajax({
+              url: ctx + "member/findMid/verifyCode",
+              type: "POST",
+              contentType: "application/json",
+              data: JSON.stringify({ email, code }),
+              beforeSend: xhr => xhr.setRequestHeader(header, token),
+              success: function(response) {
+                  $("#idList").empty();
+                  const ids = response.memberIds || [];
+                  if (ids.length === 0) {
+                      alert(response.message || "인증 실패 또는 이메일 불일치");
+                  } else {
+                      ids.forEach(id => $("#idList").append('<li class="list-group-item text-center">' + id + '</li>'));
+                      alert(response.message || "인증 성공! 전체 아이디를 표시합니다.");
+                      clearInterval(intervalFindId);  // 인증 성공 시 타이머 종료
+                      $('#timeLimitFindId').text('');
+                  }
+              },
+              error: function(xhr) {
+                  alert(xhr.responseJSON?.message || "인증 실패 또는 이메일 불일치");
+              }
+          });
+      });
+
+      // 모달 닫힐 때 초기화
+      $('#idModal').on('hidden.bs.modal', function() {
+          $('#authEmail').val('');
+          $('#authCode').val('');
+          $('#authForm').addClass('d-none');
+          $('#idList').empty();
+          $('#timeLimitFindId').text('');
+          clearInterval(intervalFindId);
+      });
+    });
+  </script>
+
+  <!-- CSRF -->
+  <meta th:name="_csrf" th:content="${_csrf.token}" />
+  <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+
+<body>
+
+<!-- 공통 헤더 -->
+<div th:replace="~{include/header :: header}"></div>
+
+<!-- 알림 메시지 -->
+<div th:replace="~{include/message :: alertMessage}"></div>
+
+<div class="page-card">
+  <h2>아이디 찾기</h2>
+
+  <form id="findIdForm">
+    <div class="mb-3">
+      <label for="email">이메일</label>
+      <input type="text" class="form-control" id="email" placeholder="이메일 입력" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="tel">전화번호</label>
+      <input type="text" class="form-control" id="tel" placeholder="전화번호 입력" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">아이디 찾기</button>
+
+    <a th:href="@{/member/memberLogin}" class="btn btn-secondary w-100 mt-2">돌아가기</a>
+  </form>
+</div>
+
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="idModal" tabindex="-1" aria-labelledby="idModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="idModalLabel">아이디 목록</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <ul id="idList" class="list-group list-group-flush"></ul>
+
+        <div id="timeLimitFindId"></div>
+
+        <div id="authForm" class="mt-3 d-none">
+          <input type="email" id="authEmail" class="form-control mb-2" placeholder="가입된 이메일">
+
+          <button id="sendCodeBtn" class="btn btn-warning w-100 mb-2">
+            <span id="sendCodeText">인증코드 발송</span>
+            <span id="sendCodeSpinner" class="spinner-border spinner-border-sm d-none"></span>
+          </button>
+
+          <input type="text" id="authCode" class="form-control mb-2" placeholder="인증코드 입력">
+          <button id="verifyBtn" class="btn btn-success w-100">인증 확인</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="viewAllBtn" class="btn btn-primary">전체 보기</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

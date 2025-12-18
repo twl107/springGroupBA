@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${meta.name} + ' 상세 정보'"></title>
+
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+
+  <style>
+    .detail-wrapper {
+      max-width: 1100px;
+      margin: 110px auto 80px;
+      padding: 0 20px;
+    }
+
+    .detail-card {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 40px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 36px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .detail-img {
+      width: 100%;
+      height: 320px;
+      object-fit: cover;
+      border-radius: 14px;
+    }
+
+    .detail-title {
+      font-size: 30px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .detail-model {
+      color: #888;
+      margin-bottom: 18px;
+      font-size: 15px;
+    }
+
+    .detail-summary {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #444;
+    }
+
+    .detail-desc-box {
+      margin-top: 50px;
+      background: #fafafa;
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .detail-desc-box h3 {
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .detail-desc {
+      white-space: pre-line;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    .btn-back {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background: #eee;
+      font-weight: 600;
+      text-decoration: none;
+      color: #333;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<div class="detail-wrapper">
+
+  <div class="detail-card">
+    <!-- 이미지 -->
+    <img th:if="${meta.imageUrl != null}"
+         th:src="@{${meta.imageUrl}}"
+         class="detail-img"
+         onerror="this.src='@{/images/no-image.png}'">
+
+    <img th:if="${meta.imageUrl == null}"
+         th:src="@{/images/no-image.png}"
+         class="detail-img">
+
+    <!-- 정보 -->
+    <div>
+      <div class="detail-title" th:text="${meta.name}"></div>
+      <div class="detail-model" th:text="'모델명 : ' + ${meta.model}"></div>
+
+      <div class="detail-summary" th:text="${meta.summary}"></div>
+    </div>
+  </div>
+
+  <!-- 상세 설명 -->
+  <div class="detail-desc-box">
+    <h3>상세 설명</h3>
+    <p class="detail-desc" th:text="${meta.description}"></p>
+  </div>
+
+  <a th:href="@{/sensor/info}" class="btn-back">← 센서 목록</a>
+
+</div>
+
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

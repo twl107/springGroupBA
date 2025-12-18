@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>그린소프트 - 메세지</title>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <th:block th:if="${userCsrf}">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  </th:block>
+
+  <style>
+    th {
+      background-color: #eed !important;
+    }
+    th, td {
+      border: 1px solid #ccc !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div th:replace="~{include/header :: header}"></div>
+
+  <div class="container">
+      <table class="table table-bordered">
+      <tr>
+        <th>보내는사람</th>
+        <td class="text-start">[[${webMessage.memberSendId.email}]]</td>
+      </tr>
+      <tr>
+        <th>받는사람</th>
+        <td class="text-start">[[${webMessage.memberReceiveId.email}]]</td>
+      </tr>
+      <tr>
+        <th>메세지 제목</th>
+        <td class="text-start">[[${webMessage.title}]]</td>
+      </tr>
+      <tr>
+        <th>메세지 내용</th>
+        <td class="text-start" style="height:180px" th:utext="${webMessage.content}"></td>
+      </tr>
+      <tr>
+        <td colspan="2">
+            <th:block th:if="${pageVO.preSw == 1 || pageVO.preSw == 2}">
+                <input type="button" value="답장쓰기"
+                       th:onclick="|location.href='@{/webMessage/msg(msgSw=0,id=${webMessage.id},preSw=${pageVO.preSw})}'|"
+                       class="btn btn-success btn-sm me-2"/>
+            </th:block>
+          <th:block th:if="${pageVO.preSw != 3 && pageVO.preSw != 5}">
+            <a th:href="@{webDeleteCheck(msgSw=5,id=${webMessage.id},preSw=${pageVO.preSw})}" class="btn btn-warning btn-sm me-2">휴지통</a>
+          </th:block>
+          <th:block th:if="${pageVO.preSw == 3}">
+            <a th:href="@{webDeleteCheck(msgSw=3,id=${webMessage.id},preSw=${pageVO.preSw})}" class="btn btn-danger btn-sm me-2">영구삭제</a>
+          </th:block>
+          <input type="button" value="돌아가기"
+            th:onclick="|location.href='@{/webMessage/msg(msgSw=${pageVO.preSw})}'|"
+            class="btn btn-info btn-sm"/>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

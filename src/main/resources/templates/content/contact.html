@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/contact.css}">
+    <script type="text/javascript" th:src="@{'https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId='+${ncpKeyId}}"></script>
+</head>
+<body>
+<div th:replace="~{include/header :: header}"></div>
+<main class="main-content">
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/contact1.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>CONTACT</h2>
+            <p>(주)그린소프트로 오시는 길을 안내합니다.</p>
+        </div>
+    </section>
+    <div class="sub-content-container">
+        <div id="map"></div>
+        <section class="contact-info-section">
+            <div class="info-block">
+                <h4>주소</h4>
+                <p>
+                    <strong>[도로명]</strong><br>
+                    충청북도 청주시 서원구 사직대로 109 4층
+                </p>
+                <p>
+                    <strong>[지번]</strong><br>
+                    충청북도 청주시 서원구 사창동 148-7 4층
+                </p>
+            </div>
+
+            <div class="info-block">
+                <h4>연락처</h4>
+                <p>
+                    <strong>대표전화</strong><br>
+                    043-123-4567
+                </p>
+            </div>
+
+            <div class="info-block directions">
+                <h4>찾아오시는 길</h4>
+
+                <h5>버스 이용 시</h5>
+                <p><strong>[간선버스]</strong> 814, 114, 618</p>
+                <p><strong>[일반버스]</strong> 20-2, 311, 40-1, 511, 514, 516, 611, 711, 811-2, 823, 831, 911, 917, 916-1, 101</p>
+                <p><strong>[급행버스]</strong> 747, 109, 509</p>
+
+                <h5>자가용 이용 시</h5>
+                <p>
+                    네비게이션 주소 입력 : 충청북도 청주시 서원구 사직대로 109
+                </p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const mapContainer = document.getElementById('map');
+
+        const lat = 36.6351643;
+        const lng = 127.4595427;
+        const companyName = "(주)그린소프트";
+
+        const mapLocation = new naver.maps.LatLng(lat, lng);
+
+        if (!naver.maps) {
+            console.error("Naver Maps API가 로드되지 않았습니다.");
+            mapContainer.innerHTML = "<p style='text-align:center; padding: 20px;'>지도 API를 로드하지 못했습니다. Client ID를 확인해주세요.</p>";
+            return;
+        }
+
+        const mapOptions = {
+            center: mapLocation,
+            zoom: 18,
+            zoomControl: true,
+            zoomControlOptions: {
+                position: naver.maps.Position.TOP_RIGHT
+            }
+        };
+
+        const map = new naver.maps.Map(mapContainer, mapOptions);
+
+        const marker = new naver.maps.Marker({
+            position: mapLocation,
+            map: map,
+            animation: naver.maps.Animation.BOUNCE // 마커 강조 애니메이션
+        });
+
+        const directionsUrl = `https://map.naver.com/p/directions/-/${lng},${lat},${encodeURIComponent(companyName)}/-/transit`;
+        const contentString = `
+            <div style="padding:15px; min-width:200px; text-align:center;">
+                <div style="font-weight:600; font-size:15px; margin-bottom:5px;">${companyName}</div>
+                <div style="font-size:13px; color:#666; margin-bottom:10px;">충북 청주시 서원구 사직대로 109 4층</div>
+                <a href="${directionsUrl}" target="_blank" class="btn-find-way">
+                    🚌 대중교통 길찾기
+                </a>
+            </div>
+        `;
+
+        const infoWindow = new naver.maps.InfoWindow({
+            content: contentString,
+            maxWidth: 300,
+            backgroundColor: "#ffffff",
+            borderColor: "#007bff",
+            borderWidth: 1,
+            anchorSize: new naver.maps.Size(10, 10),
+            anchorSkew: true,
+            pixelOffset: new naver.maps.Point(20, -20)
+        });
+
+        naver.maps.Event.addListener(marker, "click", function() {
+            if (infoWindow.getMap()) {
+                infoWindow.close();
+            } else {
+                infoWindow.open(map, marker);
+            }
+        });
+
+        infoWindow.open(map, marker);
+    });
+</script>
+
+</body>
+</html>

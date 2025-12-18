@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Recruit - Apply</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/recruit.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+
+  <section class="sub-visual"
+           th:style="'background-image: url(' + @{/images/recruit/apply_bg.jpg} + ');'">
+    <div class="sub-visual-content">
+      <h2>Apply</h2>
+      <p>그린소프트와 함께 성장할 인재를 기다립니다.</p>
+    </div>
+  </section>
+
+  <section class="recruit-section">
+    <h3 class="section-title">지원하기</h3>
+    <p class="section-intro">간단한 정보를 입력하고 이력서 파일을 첨부해주세요.</p>
+
+    <form class="apply-form"
+          th:action="@{/recruit/apply}" method="post" enctype="multipart/form-data">
+
+      <label>이름</label>
+      <input type="text" name="name" required>
+
+      <label>이메일</label>
+      <input type="email" name="email" required>
+
+      <label>전화번호</label>
+      <input type="text" name="phone" required>
+
+      <label>지원 직무</label>
+      <select name="position" class="form-select" required>
+        <option value="백엔드개발자">백엔드 개발자</option>
+        <option value="프론트개발자">프론트 개발자</option>
+        <option value="임베디드개발자">임베디드 개발자</option>
+        <option value="AI개발자">AI 개발자</option>
+        <option value="IoT개발자">IoT 개발자</option>
+      </select>
+
+      <label>간단 자기소개</label>
+      <textarea name="intro" rows="6" placeholder="자기소개를 입력해주세요." required></textarea>
+
+      <label>이력서 파일 업로드 (PDF 권장)</label>
+      <input type="file" name="resume" required>
+
+      <button type="submit" class="apply-btn">지원하기</button>
+    </form>
+
+  </section>
+
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

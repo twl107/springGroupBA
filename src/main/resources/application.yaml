@@ -1,0 +1,129 @@
+#server:
+#  port: 9090
+#  servlet:
+#    encoding:
+#      charset: UTF-8
+#      enabled: true
+#      force: true
+
+spring:
+  application:
+    name: springGroupBA
+
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+  thymeleaf:
+    cache: false
+
+  # 데이터베이스 설정
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    #    url: jdbc:mysql://localhost:3306/springgroupba
+    url: jdbc:mysql://localhost:3306/springGroupBA?allowLoadLocalInfile=true&allowLocalInfile=true
+
+    username:
+    password:
+
+  # JPA 설정
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: false
+    #    show-sql: true
+    properties:
+      hibernate:
+        format_sql: false
+    #        format_sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+  # 시큐리티 설정
+  security:
+    user:
+      name: admin@green.com
+      password: 1234
+
+  # 파일 업로드 용량 설정
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 30MB
+
+
+  # Email setting
+  mail:
+    host: smtp.gmail.com
+    port:
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    default-encoding: UTF-8
+
+  mvc:
+    locale: ko_KR
+    locale-resolver: fixed
+    http:
+      encoding:
+        charset: UTF-8
+        enabled: true
+        force: true
+
+# 파일 저장 경로
+org:
+  zerock:
+    upload:
+      path: D:/springbootProject/springGroup/springGroupBA/upload/
+
+# 로그 설정
+logging:
+  level:
+    org:
+      hibernate: OFF
+#        type:
+#          descriptor:
+#            sql: trace
+
+# 네이버 지도 API
+ncp:
+  client-id: ""
+  client-secret: ""
+
+# 공공데이터 API(화재)
+api:
+  public-data:
+    base-url: ""
+    key : ""
+
+# 포트원 결제 API
+portOne:
+  code:
+
+# kakao login을 위한 key setting
+kakao:
+  client:
+    id:
+    secret:
+  redirect:
+    url: http://49.142.157.252/springGroupBA/member/kakaoLogin
+  logout:
+    url: http://49.142.157.252/springGroupBA//member/kakaoLogout
+    #49.142.157.252
+
+# ----------------------------------------------------- SET GLOBAL local_infile = 1;
+# 외부 CSV 기반 설정
+# ----------------------------------------------------- SHOW VARIABLES LIKE 'local_infile';
+sensor:
+  csv-path: D:/springbootProject/springGroup/springGroupBA/sensor-data/sensor.csv
+  #csv-path: C:/springbootProject/springGroup/springGroupBA/sensor-data/sensor.csv

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${meta.id == null ? '센서 추가' : '센서 정보 수정'}"></title>
+
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+
+  <style>
+    /* ===== WRAPPER ===== */
+    .admin-wrapper {
+      max-width: 1100px;
+      margin: 60px auto 100px;
+      padding: 0 20px;
+    }
+
+    /* ===== HEADER ===== */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+
+    .page-title {
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .badge-mode {
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .badge-add { background: #2e7d32; }
+    .badge-edit { background: #1565c0; }
+
+    /* ===== CARD ===== */
+    .form-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 30px 34px;
+      margin-bottom: 26px;
+      box-shadow: 0 8px 26px rgba(0,0,0,0.07);
+    }
+
+    .form-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 22px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* ===== FORM ROW ===== */
+    .form-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .form-control:read-only {
+      background: #f3f3f3;
+    }
+
+    .form-control.important {
+      border: 2px solid #2e7d32;
+      background: #f7fff9;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .hint {
+      grid-column: 2 / 3;
+      font-size: 13px;
+      color: #777;
+      margin-top: -6px;
+    }
+
+    /* ===== IMAGE ===== */
+    .img-preview {
+      width: 100%;
+      max-width: 480px;
+      height: 240px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 1px solid #ddd;
+      margin-bottom: 14px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-area {
+      position: sticky;
+      bottom: 0;
+      background: #fff;
+      padding: 18px 0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .btn-save {
+      background: #2e7d32;
+      color: #fff;
+      padding: 10px 26px;
+      border-radius: 8px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(46,125,50,0.35);
+    }
+
+    .btn-back {
+      background: #e0e0e0;
+      padding: 10px 26px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      color: #333;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+
+<body>
+<div th:replace="~{include/header :: header}"></div>
+
+<div class="admin-wrapper">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="page-title"
+         th:text="${meta.id == null ? '센서 추가' : '센서 정보 수정'}"></div>
+
+    <span class="badge-mode"
+          th:classappend="${meta.id == null ? 'badge-add' : 'badge-edit'}"
+          th:text="${meta.id == null ? 'ADD' : 'EDIT'}"></span>
+  </div>
+
+  <form th:action="@{/sensor/save}" method="post" enctype="multipart/form-data">
+
+    <input type="hidden" name="id" th:value="${meta.id}">
+
+    <!-- 기본 정보 -->
+    <div class="form-card">
+      <h3>기본 정보</h3>
+
+      <div class="form-row">
+        <label class="form-label">센서 코드</label>
+        <input class="form-control important"
+               name="code"
+               th:value="${meta.code}"
+               th:readonly="${meta.id != null}"
+               required
+               placeholder="예: iaq, pt100, noise">
+      </div>
+
+      <div class="hint" th:if="${meta.id != null}">
+        ※ 센서 코드는 시스템 식별자로 수정할 수 없습니다.
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">센서명</label>
+        <input class="form-control important"
+               name="name"
+               th:value="${meta.name}"
+               required>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">모델명</label>
+        <input class="form-control"
+               name="model"
+               th:value="${meta.model}">
+      </div>
+    </div>
+
+    <!-- 설명 정보 -->
+    <div class="form-card">
+      <h3>설명 정보</h3>
+
+      <div class="form-row">
+        <label class="form-label">요약 설명</label>
+        <input class="form-control important"
+               name="summary"
+               th:value="${meta.summary}">
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">상세 설명</label>
+        <textarea class="form-control"
+                  rows="6"
+                  name="description"
+                  th:text="${meta.description}"></textarea>
+      </div>
+    </div>
+
+    <!-- 이미지 관리 -->
+    <div class="form-card">
+      <h3>이미지 관리</h3>
+
+      <p class="hint">
+        ※ 센서 안내 페이지 및 상세 페이지에 사용되는 대표 이미지입니다.
+      </p>
+
+      <img th:if="${meta.imageUrl != null}"
+           th:src="@{${meta.imageUrl}}"
+           class="img-preview"
+           th:onerror="|this.src='@{/images/noimage.jpg}'|">
+
+      <input type="file" class="form-control" name="image">
+    </div>
+
+    <!-- BUTTON -->
+    <div class="btn-area">
+      <a th:href="@{/sensor/info}" class="btn-back">목록</a>
+      <button type="submit" class="btn-save">
+        저장하기
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

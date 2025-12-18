@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <th:block th:if="${userCsrf}">
+        <meta name="_csrf" th:content="${_csrf.token}" />
+        <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    </th:block>
+
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+    <h2>샘  플</h2>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>그린소프트 - 메세지</title>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <th:block th:if="${userCsrf}">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  </th:block>
+
+  <style>
+    table {
+      border: 1px solid #ddd !important;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    setInterval(() => {
+      $.ajax({
+        url: /*[[@{/webMessage/newMsgCount}]]*/,
+        type: "GET",
+        dataType: "json",
+        success: function(data){
+            if(data && data.count !== undefined){
+                $("#newMsgCount").text(data.count);
+            }
+        },
+        error: function(xhr, status, error){
+            console.log("Ajax error:", status, error);
+        }
+      });
+    }, 5000);
+  </script>
+</head>
+
+<body>
+  <div id="msgList">
+    <div th:replace="~{include/header :: header}"></div>
+    <div th:replace="~{include/message :: alertMessage}"></div>
+
+    <table class="table table-hover">
+      <thead>
+      <tr class="table-secondary">
+        <th>번호</th>
+        <th th:text="${pageVO.msgSw==1 || pageVO.msgSw==2 || pageVO.msgSw==4 ? '보낸사람' : '받은사람'}"></th>
+        <th>제목</th>
+        <th th:text="${pageVO.msgSw==4 ? '수신날짜' : (pageVO.msgSw==1 || pageVO.msgSw==2 ? '받은날짜' : (pageVO.msgSw==3 || pageVO.msgSw==5 ? '보낸날짜' : ''))}"></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="vo, st : ${pageVO.webMessageList}">
+        <!-- 번호 -->
+        <td>[[${pageVO.curScrStartNo - st.index}]]</td>
+
+        <!-- 보낸사람 / 받는사람 -->
+        <td th:text="${pageVO.msgSw==1 || pageVO.msgSw==2 || pageVO.msgSw==4 ? vo.memberSendId.email : vo.memberReceiveId.email}"></td>
+
+        <!-- 제목 -->
+        <td class="text-start">
+          <a th:if="${pageVO.msgSw != 4 && pageVO.msgSw != 5}"
+             th:href="@{/webMessage/msg(msgSw=6, id=${vo.id}, preSw=${pageVO.msgSw})}">[[${vo.title}]]</a>
+          <span th:if="${pageVO.msgSw==4 || pageVO.msgSw==5}">[[${vo.title}]]</span>
+          <img th:if="${vo.receiveSw=='n' && pageVO.msgSw!=3 && pageVO.msgSw!=4 && pageVO.msgSw!=5}"
+               th:src="@{/images/new.gif}" width="25px"/>
+        </td>
+
+        <!-- 보낸/받은/수신 날짜 -->
+        <td>
+          <!-- 받은 메시지일 때 -->
+          <span th:if="${pageVO.msgSw==1 || pageVO.msgSw==2}">
+            <span th:text="${vo.receiveDate != null ? #temporals.format(vo.receiveDate,'yyyy-MM-dd HH:mm:ss') : '날짜 없음'}"></span>
+          </span>
+
+          <!-- 수신확인 메시지일 때 -->
+          <span th:if="${pageVO.msgSw==4}"
+                th:text="${vo.readDate != null ? #temporals.format(vo.readDate,'yyyy-MM-dd HH:mm:ss') : '읽지않음'}">
+          </span>
+
+          <!-- 보낸 메시지일 때 -->
+          <span th:if="${pageVO.msgSw==3 || pageVO.msgSw==5}">
+            <span th:text="${vo.sendDate != null ? #temporals.format(vo.sendDate,'yyyy-MM-dd HH:mm:ss') : '날짜 없음'}"></span>
+          </span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- 페이지네이션 -->
+    <div class="text-center" th:if="${pageVO.totRecCnt > 0}">
+      <ul class="pagination justify-content-center pagination-sm">
+
+        <!-- 첫페이지 -->
+        <li class="page-item" th:if="${pageVO.pag > 1}">
+          <a class="page-link"
+             th:href="@{/webMessage/msg(msgSw=${pageVO.msgSw},pag=1,pageSize=${pageVO.pageSize})}">첫페이지</a>
+        </li>
+
+        <!-- 이전 블록 -->
+        <li class="page-item" th:if="${pageVO.curBlock > 0}">
+          <a class="page-link"
+             th:href="@{/webMessage/msg(msgSw=${pageVO.msgSw},pageSize=${pageVO.pageSize},pag=${pageVO.curBlock*pageVO.blockSize})}">이전블록</a>
+        </li>
+
+        <!-- 페이지 번호 -->
+        <li class="page-item"
+            th:each="i: ${#numbers.sequence(1, pageVO.totPage)}"
+            th:classappend="${i == pageVO.pag}? 'active'">
+          <a class="page-link"
+             th:href="@{/webMessage/msg(msgSw=${pageVO.msgSw},pageSize=${pageVO.pageSize},pag=${i})}"
+             th:text="${i}"></a>
+        </li>
+
+        <!-- 다음 블록 -->
+        <li class="page-item" th:if="${pageVO.curBlock < pageVO.lastBlock}">
+          <a class="page-link"
+             th:href="@{/webMessage/msg(msgSw=${pageVO.msgSw},pageSize=${pageVO.pageSize},pag=${(pageVO.curBlock+1)*pageVO.blockSize + 1})}">다음블록</a>
+        </li>
+
+        <!-- 마지막페이지 -->
+        <li class="page-item" th:if="${pageVO.pag < pageVO.totPage}">
+          <a class="page-link"
+             th:href="@{/webMessage/msg(msgSw=${pageVO.msgSw},pag=${pageVO.totPage},pageSize=${pageVO.pageSize})}">마지막페이지</a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

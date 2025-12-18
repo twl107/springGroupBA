@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script th:inline="javascript">
+    const ctx = /*[[@{/}]]*/ "/";
+  </script>
+</head>
+<body>
+<nav class="admin-sidebar" th:fragment="sidebar">
+  <div class="sidebar-header">
+    <a th:href="@{/admin/adminMain}" class="sidebar-title">
+      그린소프트 Admin
+    </a>
+    <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
+  </div>
+
+  <div class="sidebar-home">
+    <a th:href="@{/}" class="home-btn">
+      🏠 사이트 홈으로
+    </a>
+  </div>
+
+  <ul class="menu-group">
+    <li class="menu-item">
+      <button class="menu-btn" onclick="toggleMenu(this)">
+        <span>👤 회원 관리</span>
+        <span>▼</span>
+      </button>
+      <div class="submenu">
+        <a th:href="@{/admin/members/list}">회원 목록</a>
+        <a th:href="@{/admin/members/grade}">등급 관리</a>
+        <a th:href="@{/admin/members/memberDel}">탈퇴 회원</a>
+        <a th:href="@{/admin/members/mail}">메일/SMS 발송</a>
+      </div>
+    </li>
+
+    <li class="menu-item">
+      <button class="menu-btn" onclick="toggleMenu(this)">
+        <span>🛍️ 쇼핑몰 관리</span>
+        <span>▼</span>
+      </button>
+      <div class="submenu">
+        <a th:href="@{/admin/dbShop/dbProductInput}">상품 등록/관리</a>
+        <a th:href="@{/admin/dbShop/dbProductList}">상품 리스트</a>
+        <a th:href="@{/admin/dbShop/adminOrderList}">주문/배송 관리</a>
+      </div>
+    </li>
+
+    <li class="menu-item">
+      <button class="menu-btn" onclick="toggleMenu(this)">
+        <span>📝 게시판 관리</span>
+        <span>▼</span>
+      </button>
+      <div class="submenu">
+        <a th:href="@{/admin/report/list}">신고리스트</a>
+        <a th:href="@{/inquiry/adminList}">QnA리스트</a>
+        <a th:href="@{/admin/review/list}">고객후기 관리</a>
+      </div>
+    </li>
+
+    <li class="menu-item">
+      <button class="menu-btn" onclick="toggleMenu(this)">
+        <span>💼 채용 관리</span>
+        <span>▼</span>
+      </button>
+      <div class="submenu">
+        <a th:href="@{/admin/recruit/manage}">채용 페이지 관리</a>
+        <a th:href="@{/admin/recruit/applicants}">지원자 관리</a>
+      </div>
+    </li>
+
+    <li class="menu-item">
+      <button class="menu-btn" onclick="toggleMenu(this)">
+        <span>📋 설문조사 관리</span>
+        <span>▼</span>
+      </button>
+      <div class="submenu">
+        <a th:href="@{/admin/survey}">설문 메타 목록</a>
+      </div>
+    </li>
+
+    <li class="menu-item">
+      <button class="menu-btn" onclick="toggleMenu(this)">
+        <span>📊 통계/로그</span>
+        <span>▼</span>
+      </button>
+      <div class="submenu">
+        <a th:href="@{/admin/stats/visit}">방문자 통계</a>
+        <a th:href="@{/admin/stats/join}">가입 통계</a>
+        <a th:href="@{/admin/log/access}">접속 로그</a>
+      </div>
+    </li>
+
+    <li class="menu-item">
+      <button class="menu-btn" onclick="toggleMenu(this)">
+        <span>⚙️ 시스템 설정</span>
+        <span>▼</span>
+      </button>
+      <div class="submenu">
+        <a th:href="@{/admin/settings/basic}">사이트 기본 설정</a>
+        <a th:href="@{/admin/settings/terms}">약관 및 정책</a>
+        <a th:href="@{/admin/settings/code}">공통 코드 관리</a>
+        <a th:href="@{/admin/settings/ip}">접속 IP 차단</a>
+        <a th:href="@{/admin/settings/admin-account}">관리자 계정 관리</a>
+      </div>
+    </li>
+
+  </ul>
+
+  <div style="margin-top: auto; padding: 20px;">
+    <form th:action="@{/logout}" method="post">
+      <button type="submit"
+              style="width: 100%; padding: 10px; background: #dc3545; color: white; border: none; cursor: pointer; border-radius: 4px;">
+        로그아웃
+      </button>
+    </form>
+  </div>
+
+  <script>
+    function toggleMenu(button) {
+        const submenu = button.nextElementSibling;
+        submenu.classList.toggle('open');
+        button.classList.toggle('active');
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const currentPath = window.location.pathname.replace(ctx, "/");
+      const menuLinks = document.querySelectorAll('.submenu a');
+
+      menuLinks.forEach(link => {
+          const linkPath = link.getAttribute('href');
+
+          if (currentPath.startsWith(linkPath)) {
+              link.classList.add('active-link');
+              const parentSubmenu = link.closest('.submenu');
+
+              if (parentSubmenu) {
+                  parentSubmenu.classList.add('open');
+
+                  const toggleBtn = parentSubmenu.previousElementSibling;
+                  if (toggleBtn && toggleBtn.classList.contains('menu-btn')) {
+                      toggleBtn.classList.add('active');
+                  }
+              }
+          }
+      });
+  });
+  </script>
+</nav>
+
+</body>
+</html>

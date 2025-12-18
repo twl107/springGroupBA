@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/pds.css}">
+</head>
+
+<body>
+<div th:replace="~{include/header :: header}"></div>
+<main class="main-content">
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>공지사항</h2>
+        </div>
+    </section>
+    <div class="sub-content-container">
+        <div class="pds-search-container">
+            <form class="pds-search-form" th:action="@{/notice/noticeList}" method="get">
+                <input type="hidden" name="page" value="1">
+                <input type="text" name="keyword" placeholder="검색어를 입력하세요" th:value="${pageRequestDTO.keyword}">
+                <button type="submit">검색</button>
+            </form>
+            <th:block sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/notice/noticeInput}" class="btn-write">글쓰기</a>
+            </th:block>
+        </div>
+        <div class="pds-table-wrap">
+            <table class="pds-table">
+                <thead>
+                <tr>
+                    <th class="th-num">번호</th>
+                    <th class="th-title">제목</th>
+                    <th class="th-writer">작성자</th>
+                    <th class="th-date">등록일</th>
+                    <th class="th-views">조회</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${result.totalPage == 0}">
+                    <td colspan="5" class="no-data">등록된 공지사항이 없습니다.</td>
+                </tr>
+                <tr th:each="dto, status : ${result.dtoList}" th:classappend="${dto.isFixed()} ? 'table-warning' : ''">
+                    <td th:if="${dto.isFixed()}"><span class="badge bg-danger" style="color:red; font-weight:bold;">[공지]</span></td>
+                    <td th:unless="${dto.isFixed()}"
+                        th:text="${result.totalCount - ((result.page - 1) * result.size) - status.index}">
+                    </td>
+                    <td class="td-title">
+                        <a th:href="@{/notice/noticeContent(id=${dto.id}, page=${result.page}, keyword=${pageRequestDTO.keyword})}">
+                            <span th:if="${dto.openSw == 'NO'}" style="margin-right: 3px;">🔒</span>
+                            <span th:text="${dto.title}" th:style="${dto.isFixed} ? 'font-weight:bold;' : ''"></span>
+                            <span th:if="${dto.fileCount > 0}" style="margin-left:5px;">💾</span>
+                        </a>
+                    </td>
+                    <td th:text="${dto.writerName}"></td>
+                    <td th:text="${#temporals.format(dto.regDate, 'yyyy-MM-dd')}"></td>
+                    <td th:text="${dto.readNum}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pds-pagination" th:if="${result.totalPage > 0}">
+            <ul>
+                <li th:if="${result.prev}">
+                    <a th:href="@{/notice/noticeList(page=${result.start - 1}, keyword=${pageRequestDTO.keyword})}">&lt;</a>
+                </li>
+                <li th:each="pageNum : ${result.pageList}" th:classappend="${result.page == pageNum} ? 'active'">
+                    <a th:href="@{/notice/noticeList(page=${pageNum}, keyword=${pageRequestDTO.keyword})}">[[${pageNum}]]</a>
+                </li>
+                <li th:if="${result.next}">
+                    <a th:href="@{/notice/noticeList(page=${result.end + 1}, keyword=${pageRequestDTO.keyword})}">&gt;</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</main>
+<div th:replace="~{include/footer :: footer}"></div>
+<th:block th:replace="~{include/messageScript :: alertFragment}"></th:block>
+
+</body>
+</html>

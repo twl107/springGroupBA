@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>인증코드</title>
+</head>
+
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial, sans-serif;">
+<!-- 전체 컨테이너 -->
+<table align="center" cellpadding="0" cellspacing="0" width="100%"
+       style="max-width:500px;margin:40px auto;background:#ffffff;
+              border-radius:14px;border:1px solid #e5e7eb;
+              box-shadow:0 3px 12px rgba(0,0,0,0.05);">
+  <tr>
+    <td style="padding:36px 32px;text-align:center;">
+
+      <!-- 로고 -->
+      <img src="cid:logo_greensoft.png" width="150" style="margin-bottom:26px;">
+
+      <!-- 제목 -->
+      <h2 style="margin:0;color:#111827;font-size:24px;font-weight:700;letter-spacing:-0.3px;">
+        이메일 인증코드
+      </h2>
+
+      <p style="margin:20px 0 30px;color:#4b5563;font-size:15px;line-height:1.7;">
+        아래의 인증코드를 입력하여 이메일 인증을 완료해 주세요.
+      </p>
+
+      <!-- 인증코드 -->
+      <div style="margin-bottom:32px;">
+        <div style="display:inline-block;background:#10b981;color:white;
+                    padding:20px 34px;font-size:32px;font-weight:700;
+                    border-radius:10px;letter-spacing:4px;">
+          {{CODE}}
+        </div>
+      </div>
+
+      <p style="color:#9ca3af;font-size:13px;line-height:1.6;margin-bottom:34px;">
+        인증을 요청하지 않았다면 본 메일을 무시하셔도 됩니다.
+      </p>
+
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 26px;">
+
+      <!-- 방문하기 버튼 -->
+      <a href="http://localhost:9090/member/memberJoin"
+         style="display:inline-block;background:#10b981;color:#ffffff;
+                font-size:15px;font-weight:600;padding:13px 26px;
+                border-radius:8px;text-decoration:none;">
+        SpringBootBA 방문하기
+      </a>
+
+      <p style="color:#b6b6b6;font-size:12px;margin-top:26px;">
+        © 2025 SpringBootBA. All rights reserved.
+      </p>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

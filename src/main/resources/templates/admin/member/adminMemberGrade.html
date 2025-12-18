@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <title>회원등급 관리 - 관리자</title>
+
+  <link rel="stylesheet" th:href="@{/css/admin/member.css}">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+
+  <style>
+    .search-form {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 10px;
+    }
+    .search-select-sm {
+      width: 120px;
+    }
+    .search-form .form-select-sm,
+    .search-form .form-control-sm,
+    .search-form .btn-sm {
+      height: 34px;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .btn-search-wide {
+      padding: 0 18px;
+      white-space: nowrap;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    const ctx = /*[[@{/}]]*/ "";
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const gradeModal = document.getElementById('gradeModal');
+
+      gradeModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const memberId = button.getAttribute('data-id');
+        const nickname = button.getAttribute('data-nickname');
+        const role = button.getAttribute('data-role');
+
+        document.getElementById('modalNickname').textContent = nickname;
+
+        // form action 변경
+        const form = document.getElementById('gradeForm');
+        form.setAttribute('action', ctx + 'admin/members/gradeChange/' + memberId);
+
+        // select 기본값 설정
+        document.getElementById('modalNewRole').value = role;
+      });
+    });
+  </script>
+</head>
+
+<body>
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+<div th:replace="~{include/message :: alertMessage}"></div>
+
+<div class="container mt-4">
+  <!-- 상단 제목 -->
+  <div class="mb-4">
+    <h3 class="fw-bold mb-1">회원등급 관리</h3>
+    <small class="text-secondary">회원 등급을 관리할 수 있습니다.</small>
+  </div>
+
+  <!-- 버튼 그룹 -->
+  <div class="d-flex mb-3 admin-menu">
+    <a th:href="@{/admin/members/list}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'list'} ? ' active'">회원 목록</a>
+    <a th:href="@{/admin/members/grade}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'grade'} ? ' active'">등급 관리</a>
+    <a th:href="@{/admin/members/memberDel}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'memberDel'} ? ' active'">탈퇴 회원</a>
+    <a th:href="@{/admin/members/mail}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'mailSend'} ? ' active'">메일/SMS 발송</a>
+  </div>
+
+  <!-- 검색 영역 -->
+  <div class="row mb-3">
+    <div class="col-auto">
+      <form th:action="@{/admin/members/grade}" method="get" class="search-form">
+
+        <!-- 검색 기준 -->
+        <select class="form-select form-select-sm search-select-sm" name="search">
+          <option value="mid" th:selected="${pageVO.search == 'mid'}">아이디</option>
+          <option value="name" th:selected="${pageVO.search == 'name'}">이름</option>
+          <option value="email" th:selected="${pageVO.search == 'email'}">이메일</option>
+        </select>
+
+        <!-- 검색어 -->
+        <input type="text" class="form-control form-control-sm" name="keyword" th:value="${keyword}" placeholder="검색어 입력">
+
+        <!-- 등급 선택 -->
+        <select class="form-select form-select-sm search-select-sm" name="role">
+          <option value="">등급 선택</option>
+          <option value="ADMIN" th:selected="${role == 'ADMIN'}">관리자</option>
+          <option value="VIP" th:selected="${role == 'VIP'}">우수회원</option>
+          <option value="USER" th:selected="${role == 'USER'}">정회원</option>
+          <option value="JUNIOR" th:selected="${role == 'JUNIOR'}">준회원</option>
+        </select>
+
+        <button type="submit" class="btn btn-sm btn-primary btn-search-wide">검색</button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- 회원 등급 테이블 -->
+  <div class="table-responsive mb-4">
+    <table class="table table-hover table-striped table-bordered align-middle text-center">
+      <thead class="table-light">
+      <tr>
+        <th scope="col">NO</th>
+        <th scope="col">아이디</th>
+        <th scope="col">이름</th>
+        <th scope="col">성별</th>
+        <th scope="col">닉네임</th>
+        <th scope="col">이메일</th>
+        <th scope="col">전화번호</th>
+        <th scope="col">가입일</th>
+        <th scope="col">현재 등급</th>
+        <th scope="col">관리</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="u, st : ${pageVO.memberList}">
+        <td th:text="${pageVO.totRecCnt - ((pageVO.pag - 1) * pageVO.pageSize + st.index)}"></td>
+        <td th:text="${u.mid}"></td>
+        <td th:text="${u.name}"></td>
+        <td th:text="${u.gender}"></td>
+        <td th:text="${u.nickName}"></td>
+        <td th:text="${u.email}"></td>
+        <td th:text="${u.tel}"></td>
+        <td th:text="${u.joinDate != null ? #temporals.format(u.joinDate, 'yyyy-MM-dd') : '-'}"></td>
+        <td>
+          <span th:if="${u.role == T(com.example.springGroupBA.constant.Role).ADMIN}" class="badge bg-danger" th:text="${u.role.label}"></span>
+          <span th:if="${u.role == T(com.example.springGroupBA.constant.Role).VIP}" class="badge bg-warning text-dark" th:text="${u.role.label}"></span>
+          <span th:if="${u.role == T(com.example.springGroupBA.constant.Role).USER}" class="badge bg-success" th:text="${u.role.label}"></span>
+          <span th:if="${u.role == T(com.example.springGroupBA.constant.Role).JUNIOR}" class="badge bg-info text-dark" th:text="${u.role.label}"></span>
+        </td>
+        <td>
+          <a href="#" class="btn btn-outline-primary btn-sm"
+             th:attr="data-id=${u.id}, data-role=${u.role}, data-nickname=${u.nickName}"
+             data-bs-toggle="modal" data-bs-target="#gradeModal">
+            등급 변경
+          </a>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(pageVO.memberList)}">
+        <td colspan="10" class="text-muted">회원이 없습니다.</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 페이지네이션 -->
+  <th:block th:replace="~{include/pagination :: pagination('/admin/members/grade', ${pageVO})}"></th:block>
+</div>
+
+<!-- 등급 변경 모달 -->
+<div class="modal fade" id="gradeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">회원 등급 변경</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form th:action="@{'/admin/members/gradeChange/' + 0}" method="post" id="gradeForm">
+        <div class="modal-body text-center">
+          <p>
+            <strong id="modalNickname" class="text-primary"></strong> 님의 등급을 변경하시겠습니까?
+          </p>
+          <select class="form-select" name="newRole" id="modalNewRole">
+            <option th:each="r : ${T(com.example.springGroupBA.constant.Role).values()}"
+                    th:value="${r.name()}"
+                    th:text="${r.label}">
+            </option>
+          </select>
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+          <button type="submit" class="btn btn-primary">변경하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,441 @@
+/* =============================
+   BASE
+============================= */
+body {
+  background: #eef1f5;
+  padding-top: 110px;
+  font-family: 'Pretendard', sans-serif;
+}
+
+/* =============================
+   TOP FILTER
+============================= */
+.top-filter {
+  width: 92%;
+  margin: 20px auto;
+  padding: 22px 28px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.title-wrap h1 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #7a7f87;
+}
+
+.filter-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.field input,
+.field select {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid #d0d2d7;
+  background: #f9fafb;
+}
+
+.top-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #fff;
+  background: #3498db;
+}
+
+.live-btn {
+  background: #e67e22;
+}
+
+/* =============================
+   VIRTUAL CLOCK
+============================= */
+.virtual-clock-bar {
+  width: 92%;
+  margin: 0 auto 20px;
+  padding: 12px 18px;
+
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clock-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clock-left .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #27ae60;
+  animation: blink 1.4s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.4; }
+}
+
+.mode-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.clock-right {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* =============================
+   DASHBOARD
+============================= */
+.dashboard-layout {
+  width: 92%;
+  margin: 0 auto 40px;
+
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+}
+
+.section-title {
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+
+/* =============================
+   SENSOR GRID
+============================= */
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.sensor-card {
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.sensor-card:hover {
+  transform: translateY(-3px);
+}
+
+.sensor-card .left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sensor-card .icon {
+  font-size: 18px;
+}
+
+.sensor-card .label {
+  font-weight: 600;
+}
+
+.sensor-card .value {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* 상태 색상 */
+.sensor-card.GOOD {
+  background: #2ecc71;
+  color: #fff;
+}
+
+.sensor-card.BAD {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.sensor-card.EMPTY {
+  background: #ecf0f1;
+  color: #7f8c8d;
+}
+
+/* =============================
+   WEATHER
+============================= */
+.dashboard-right {
+  position: sticky;
+  top: 120px;
+}
+
+.weather-box {
+  background: linear-gradient(135deg, #1e90ff, #005bbb);
+  color: #fff;
+  padding: 25px;
+  border-radius: 20px;
+}
+
+/* =============================
+   MODAL
+============================= */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 2000;
+
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-box {
+  background: #fff;
+  padding: 22px;
+  width: 320px;
+  border-radius: 14px;
+}
+
+.modal-section {
+  margin-bottom: 12px;
+}
+
+.modal-section label {
+  font-size: 13px;
+}
+
+.modal-section input,
+.modal-section select {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid #d0d2d7;
+}
+
+#btnSaveThreshold {
+  width: 100%;
+  padding: 9px;
+  border-radius: 8px;
+  border: none;
+  background: #3498db;
+  color: #fff;
+  font-weight: 600;
+}
+
+.weather-card {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.weather-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weather-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.weather-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.weather-main {
+  text-align: center;
+  margin: 10px 0;
+}
+
+.weather-temp {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.weather-minmax {
+  font-size: 13px;
+  color: #555;
+}
+
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.weather-grid span {
+  color: #666;
+}
+
+
+/* =============================
+   SIMULATION CLOCK (HTML class)
+============================= */
+.simulation-clock{
+  width: 92%;
+  margin: 0 auto 20px;
+  padding: 12px 18px;
+
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.simulation-clock .clock-label{
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: .02em;
+}
+.simulation-clock .clock-time{
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+}
+
+.delta{font-size:12px;opacity:.85;margin-left:6px;}
+
+
+/* RIGHT: Weather Panel */
+.dashboard-right {
+    position: sticky;
+    top: 120px;
+}
+
+/* ===========================
+   Weather Card – Enhanced UI
+=========================== */
+
+.weather-box {
+    background: linear-gradient(145deg, #1e88ff, #0051c7);
+    color: #ffffff;
+    border-radius: 22px;
+    padding: 26px 24px;
+    box-shadow:
+        0 12px 28px rgba(0, 80, 200, 0.35),
+        inset 0 0 0 1px rgba(255,255,255,0.15);
+}
+
+/* Header */
+.weather-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.weather-icon {
+    font-size: 46px;
+    color: #ffe082;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+}
+
+.weather-title {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.weather-date {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+/* Grid */
+.weather-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+/* Item */
+.weather-item {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    padding: 14px 14px 16px;
+    backdrop-filter: blur(6px);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+}
+
+/* Main Temperature */
+.weather-item.big {
+    grid-column: span 2;
+    text-align: center;
+    padding: 22px 10px;
+}
+
+.weather-item.big .label {
+    font-size: 14px;
+    opacity: 0.85;
+    margin-bottom: 6px;
+}
+
+.weather-item.big .value {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+/* Normal Items */
+.weather-item .label {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.weather-item .value {
+    margin-top: 6px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Error */
+.weather-error {
+    text-align: center;
+    padding: 26px;
+    font-size: 15px;
+    opacity: 0.9;
+}

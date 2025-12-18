@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트 - 문의 수정</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/inquiry.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+<main class="main-content">
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>1:1 문의 수정</h2>
+        </div>
+    </section>
+    <div class="sub-content-container">
+        <div class="pds-form-container">
+            <form th:action="@{/inquiry/inquiryUpdate}" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="id" th:value="${dto.id}">
+                <div class="form-group">
+                    <label for="title" class="form-label">제목</label>
+                    <input type="text" class="form-control" id="title" name="title"
+                           th:value="${dto.title}" required>
+                </div>
+                <div class="form-group">
+                    <label for="content" class="form-label">내용</label>
+                    <textarea class="form-control" id="content" name="content" required
+                              th:text="${dto.content}"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">첨부파일 (이미지)</label>
+                    <div class="file-list" th:if="${dto.originalFileName != null}" style="margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 5px;">
+                        <span style="font-size: 0.9rem; color: #555;">현재 파일: </span>
+                        <strong th:text="${dto.originalFileName}"></strong>
+                        <p style="font-size: 0.8rem; color: #dc3545; margin-top: 5px; margin-bottom: 0;">
+                            ※ 새로운 파일을 선택하면 기존 파일은 삭제되고 교체됩니다.
+                        </p>
+                    </div>
+                    <input type="file" class="form-control" id="file" name="file" accept="image/*">
+                </div>
+                <div class="btn-area">
+                    <a th:href="@{/inquiry/inquiryContent(id=${dto.id})}" class="btn-cancel">취소</a>
+                    <button type="submit" class="btn-submit">수정 완료</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+<th:block th:replace="~{include/messageScript :: alertFragment}"></th:block>
+
+</body>
+</html>

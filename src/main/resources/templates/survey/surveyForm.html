@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>BizMonitor 설문 조사</title>
+
+  <style>
+    body {
+        background: #f3f4f6;
+        font-family: 'Pretendard', sans-serif;
+        padding: 40px 0;
+    }
+    .survey-container {
+        background: white;
+        width: 90%;
+        max-width: 900px;
+        margin: auto;
+        padding: 30px 40px;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    }
+    h2 {
+        margin: 0 0 20px 0;
+        font-size: 28px;
+        color: #009b69;
+    }
+    .question {
+        margin-bottom: 28px;
+    }
+    .question-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    textarea {
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 15px;
+    }
+    select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    button {
+        margin-top: 35px;
+        padding: 14px 28px;
+        font-size: 17px;
+        background: #009b69;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+    }
+    button:hover {
+        background: #007c53;
+    }
+  </style>
+</head>
+<body>
+
+<div class="survey-container">
+
+  <h2>📊 BizMonitor 기능 설문 조사</h2>
+  <p style="color:#666;">BizSoft 산업 모니터링 시스템 개선을 위해 귀중한 의견을 듣고자 합니다.</p>
+  <br>
+
+  <h2 th:text="${meta.title}"></h2>
+  <p th:text="${meta.description}" style="margin-bottom:25px;"></p>
+
+  <form th:action="@{/survey/submit}" method="post">
+    <input type="hidden" name="surveyId" th:value="${meta.id}">
+
+    <div th:each="item,iter : ${formList}" class="question">
+
+      <p class="question-title">
+        <span th:text="${iter.index + 1}"></span>.
+        <span th:text="${item.question.questionText}"></span>
+      </p>
+
+      <!-- SINGLE -->
+      <div th:if="${item.question.questionType.name() == 'SINGLE'}">
+        <div th:each="c : ${item.choices}">
+          <label>
+            <input type="radio" th:name="${'q' + item.question.id}" th:value="${c.choiceText}">
+            <span th:text="${c.choiceText}"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- MULTI -->
+      <div th:if="${item.question.questionType.name() == 'MULTI'}">
+        <div th:each="c : ${item.choices}">
+          <label>
+            <input type="checkbox" th:name="${'q' + item.question.id}" th:value="${c.choiceText}">
+            <span th:text="${c.choiceText}"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- TEXT -->
+      <div th:if="${item.question.questionType.name() == 'TEXT'}">
+        <textarea th:name="${'q' + item.question.id}" rows="3" placeholder="답변을 입력해주세요"></textarea>
+      </div>
+
+      <!-- SELECT -->
+      <div th:if="${item.question.questionType.name() == 'SELECT'}">
+        <select th:name="${'q' + item.question.id}">
+          <option value="">-- 선택해주세요 --</option>
+          <option th:each="c : ${item.choices}"
+                  th:value="${c.choiceText}"
+                  th:text="${c.choiceText}">
+          </option>
+        </select>
+      </div>
+
+      <!-- RATING -->
+      <div th:if="${item.question.questionType.name() == 'RATING'}" style="font-size:22px;">
+        <label><input type="radio" th:name="${'q' + item.question.id}" value="1"> ⭐</label>
+        <label><input type="radio" th:name="${'q' + item.question.id}" value="2"> ⭐⭐</label>
+        <label><input type="radio" th:name="${'q' + item.question.id}" value="3"> ⭐⭐⭐</label>
+        <label><input type="radio" th:name="${'q' + item.question.id}" value="4"> ⭐⭐⭐⭐</label>
+        <label><input type="radio" th:name="${'q' + item.question.id}" value="5"> ⭐⭐⭐⭐⭐</label>
+      </div>
+
+    </div>
+
+    <button type="submit">제출하기</button>
+  </form>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>지원자 상세보기 - 관리자</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+
+<main class="admin-content">
+
+  <!-- 모바일 토글 -->
+  <button class="btn btn-outline-secondary d-lg-none mb-3" onclick="toggleSidebar()">☰ 메뉴</button>
+
+  <!-- Header -->
+  <div class="mb-4">
+    <h3 class="fw-bold mb-1">지원자 상세 정보</h3>
+    <small class="text-secondary">지원자의 상세 정보를 확인할 수 있습니다.</small>
+  </div>
+
+
+  <!-- 카드 -->
+  <div class="card shadow-sm p-4">
+
+    <!-- 기본 정보 -->
+    <h5 class="fw-bold mb-3">기본 정보</h5>
+
+    <div class="row mb-3">
+      <div class="col-lg-6 mb-2">
+        <label class="form-label text-secondary">이름</label>
+        <div class="form-control-plaintext fw-bold" th:text="${a.name}"></div>
+      </div>
+
+      <div class="col-lg-6 mb-2">
+        <label class="form-label text-secondary">연락처</label>
+        <div class="form-control-plaintext" th:text="${a.phone}"></div>
+      </div>
+
+      <div class="col-lg-6 mb-2">
+        <label class="form-label text-secondary">이메일</label>
+        <div class="form-control-plaintext" th:text="${a.email}"></div>
+      </div>
+
+      <div class="col-lg-6 mb-2">
+        <label class="form-label text-secondary">지원일</label>
+        <div class="form-control-plaintext" th:text="${#temporals.format(a.createdAt, 'yyyy-MM-dd HH:mm')}"></div>
+      </div>
+
+      <div class="col-lg-6 mb-2">
+        <label class="form-label text-secondary">지원 직무</label>
+        <div class="form-control-plaintext fw-bold" th:text="${a.position}"></div>
+      </div>
+
+      <div class="col-lg-6 mb-2">
+        <label class="form-label text-secondary">이력서 파일</label>
+        <a th:href="@{/admin/recruit/applicants/file/{id}(id=${a.id})}"
+           class="btn btn-outline-primary btn-sm"
+           target="_blank">
+          PDF 미리보기
+        </a>
+      </div>
+    </div>
+
+
+    <!-- 자기소개 -->
+    <hr class="my-4">
+
+    <h5 class="fw-bold">자기소개</h5>
+    <div class="border rounded p-3 bg-light mb-3" style="white-space:pre-wrap;"
+         th:text="${a.intro}"></div>
+
+
+    <!-- 상태 & 메모 수정 폼 -->
+    <hr class="my-4">
+
+    <form method="post" th:action="@{/admin/recruit/applicants/update}">
+      <input type="hidden" name="id" th:value="${a.id}">
+
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="fw-bold">지원 상태</label>
+          <select name="status" class="form-select">
+            <option th:value="'검토중'" th:selected="${a.status=='검토중'}">검토중</option>
+            <option th:value="'합격'"   th:selected="${a.status=='합격'}">합격</option>
+            <option th:value="'불합격'" th:selected="${a.status=='불합격'}">불합격</option>
+          </select>
+        </div>
+
+        <div class="col-md-8 mb-3">
+          <label class="fw-bold">관리자 메모</label>
+          <textarea name="adminMemo" class="form-control" rows="3">[[${a.adminMemo}]]</textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        변경사항 저장
+      </button>
+    </form>
+
+
+    <!-- 하단 버튼 -->
+    <div class="mt-4 d-flex justify-content-between">
+      <a th:href="@{/admin/recruit/applicants}" class="btn btn-secondary">목록으로</a>
+      <a th:href="@{'/admin/recruit/applicants/delete/' + ${a.id}}"
+         class="btn btn-outline-danger"
+         onclick="return confirm('정말 삭제할까요?');">
+        삭제
+      </a>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+  function toggleSidebar() {
+    document.querySelector('.admin-sidebar').classList.toggle('active');
+  }
+</script>
+
+</body>
+</html>

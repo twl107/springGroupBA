@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/pds.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+<main class="main-content">
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>공지사항</h2>
+        </div>
+    </section>
+    <div class="sub-content-container">
+        <div class="pds-form-container">
+            <div class="view-header">
+                <h3 class="view-title">
+                    <span th:if="${dto.isFixed}" class="badge bg-danger fs-6 align-middle me-2">공지</span>
+                    <span th:if="${dto.openSw == 'NO'}">🔒</span>
+                    [[${dto.title}]]
+                </h3>
+                <div class="view-meta">
+                    <span>👤 [[${dto.writerName}]]</span>
+                    <span>📅 [[${#temporals.format(dto.regDate, 'yyyy-MM-dd HH:mm')}]]</span>
+                    <span>👁️ [[${dto.readNum}]]</span>
+                </div>
+            </div>
+            <div class="view-content" th:utext="${dto.content}"></div>
+            <div class="view-files" th:if="${dto.fileCount > 0}">
+                <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: #333;">💾 첨부파일</h4>
+                <div th:each="file : ${dto.files}" style="margin-bottom: 3px;">
+                    <a th:href="@{/upload/notice/{name}(name=${file.saveFileName})}" download class="file-link" style="display: flex; align-items: center; gap: 5px;">
+                        📄 <span th:text="${file.originalFileName}"></span>
+                        <span style="color: #888; font-size: 0.8rem;">([[${file.fileSizeStr}]])</span>
+                    </a>
+                </div>
+            </div>
+            <div class="btn-area" style="margin-bottom: 40px; border-top: 1px solid #eee; padding-top: 30px;">
+                <a th:href="@{/notice/noticeList(page=${pageRequestDTO.page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}" class="btn-cancel">목록</a>
+                <th:block sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/notice/noticeUpdate(id=${dto.id}, page=${pageRequestDTO.page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}" class="btn-submit">수정</a>
+                    <form th:action="@{/notice/noticeDelete}" method="post" style="display:inline;" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <input type="hidden" name="id" th:value="${dto.id}">
+                        <button type="submit" class="btn-cancel" style="background-color: #dc3545; color: white; border: none;">삭제</button>
+                    </form>
+                </th:block>
+            </div>
+
+        </div>
+    </div>
+</main>
+<div th:replace="~{include/footer :: footer}"></div>
+<th:block th:replace="~{include/messageScript :: alertFragment}"></th:block>
+
+</body>
+</html>

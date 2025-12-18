@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>그린소프트 - 메세지</title>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <th:block th:if="${userCsrf}">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  </th:block>
+
+  <style>
+    #leftWindow {
+      float: left;
+      width: 25%;
+      height: 520px;
+      text-align: center;
+      background-color: #ddd;
+      overflow: auto;
+    }
+    #rightWindow {
+      float: left;
+      width: 75%;
+      height: 520px;
+      text-align: center;
+      background-color: #eee;
+      overflow: auto;
+    }
+    #footerMargin {
+      clear: both;
+      margin: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div th:replace="~{include/header :: header}"></div>
+
+  <div>
+    <h3 class="text-center" style="margin-top:-15px;">☆ 메세지 관리 ☆</h3>
+    <div class="text-start ms-2">(현재접속자:<span class="text-danger">[[${session.sName}]]</span>)</div>
+    <div id="leftWindow">
+      <p><br/></p>
+      <p><a th:href="@{/webMessage/msg(msgSw=0)}">메세지작성</a></p>
+      <p><a th:href="@{/webMessage/msg(msgSw=1)}">받은메세지</a></p>
+      <p><a th:href="@{/webMessage/msg(msgSw=2)}">새메세지</a></p>
+      <p><a th:href="@{/webMessage/msg(msgSw=3)}">보낸메세지</a></p>
+      <p><a th:href="@{/webMessage/msg(msgSw=4)}">수신확인</a></p>
+      <p><a th:href="@{/webMessage/msg(msgSw=5)}">휴지통</a></p>
+      <p><a th:href="@{/webMessage/msg(msgSw=9)}">휴지통비우기</a></p>
+    </div>
+    <div id="rightWindow">
+      <th:block th:switch="${pageVO.msgSw}">
+        <th:block th:case="0">
+          <h3 class="mt-2">메세지작성</h3>
+          <th:block th:insert="~{member/webMessage/msgInput}"></th:block>
+        </th:block>
+        <th:block th:case="1">
+          <h3 class="mt-2">받은메세지</h3>
+          <th:block th:insert="~{member/webMessage/msgList}"></th:block>
+        </th:block>
+        <th:block th:case="2">
+          <h3 class="mt-2">새메세지</h3>
+          <th:block th:insert="~{member/webMessage/msgList}"></th:block>
+        </th:block>
+        <th:block th:case="3">
+          <h3 class="mt-2">보낸메세지</h3>
+          <th:block th:insert="~{member/webMessage/msgList}"></th:block>
+        </th:block>
+        <th:block th:case="4">
+          <h3 class="mt-2">수신확인</h3>
+          <th:block th:insert="~{member/webMessage/msgList}"></th:block>
+        </th:block>
+        <th:block th:case="5">
+          <h3 class="mt-2">휴지통</h3>
+          <th:block th:insert="~{member/webMessage/msgList}"></th:block>
+        </th:block>
+        <th:block th:case="6">
+          <h3 class="mt-2">메세지 내용보기</h3>
+          <th:block th:insert="~{member/webMessage/msgContent}"></th:block>
+        </th:block>
+      </th:block>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>센서 대시보드</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+
+    <!-- Layout CSS -->
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" th:href="@{/css/sensor/dashboard.css}"/>
+
+    <!-- WebSocket -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <!-- ctx 전역 선언 -->
+    <script th:inline="javascript">
+        window.ctx = /*[[@{/}]]*/ "/";
+    </script>
+</head>
+
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<div class="sensor-dashboard" id="dashboardCapture">
+
+    <!-- ====== LEFT PANEL : 필터 + 센서 리스트 + 시뮬 컨트롤 ====== -->
+    <aside class="sd-left" id="sdLeft">
+        <div class="sd-left-inner">
+
+            <div class="sd-left-header">
+                <h1>실시간 센서 대시보드</h1>
+                <h2>CSV-based</h2>
+                <p class="sd-left-sub">디바이스, 기간, 센서를 선택해 단일 차트를 조회합니다.</p>
+            </div>
+
+            <!-- 디바이스 선택 -->
+            <div class="sd-group">
+                <label for="deviceSelect" class="sd-label">디바이스</label>
+                <select id="deviceSelect" class="sd-select">
+                    <option value="ENV_V2_1">작업실 1층 (ENV_V2_1)</option>
+                    <option value="ENV_V2_2">작업실 2층 (ENV_V2_2)</option>
+                    <option value="ENV_V2_3">자재 창고 (ENV_V2_3)</option>
+                    <option value="ENV_V2_4">포장실 (ENV_V2_4)</option>
+                </select>
+            </div>
+
+            <!-- 기간 선택 -->
+            <div class="sd-group">
+                <label for="startDateInput" class="sd-label">시작 시간</label>
+                <input type="datetime-local" id="startDateInput" class="sd-input">
+
+                <label for="endDateInput" class="sd-label sd-label-sub">종료 시간 (선택)</label>
+                <input type="datetime-local" id="endDateInput" class="sd-input">
+
+                <button id="applyFilterBtn" class="sd-btn sd-btn-primary">적용</button>
+
+                <div class="sd-mode">
+        <span id="modeBadge" class="sd-badge sd-badge-realtime">
+          실시간 시뮬레이션 모드
+        </span>
+                    <small class="sd-mode-hint">
+                        - 시작 시간만 선택: 실시간 시뮬레이션<br>
+                        - 시작+종료 시간 선택: 기간 조회(History)
+                    </small>
+                </div>
+            </div>
+
+            <!-- 센서 리스트 (활성만 표시, 스크롤) -->
+            <div class="sd-group sd-sensor-list-group">
+                <div class="sd-sensor-list-header">
+                    <span>센서 리스트</span>
+                    <small id="sensorListInfo" class="sd-sensor-info">활성 센서만 표시</small>
+                </div>
+                <ul id="sensorList" class="sd-sensor-list">
+                    <!-- JS에서 동적으로 생성 -->
+                </ul>
+            </div>
+
+            <!-- 시뮬레이터 컨트롤 (실시간 모드에서만 의미 있음) -->
+            <div class="sd-group sd-sim-controls">
+                <div class="sd-sim-title">시뮬레이터 제어</div>
+                <div class="sd-sim-buttons">
+                    <button class="sd-btn sd-btn-outline" id="pauseBtn">중단</button>
+                    <button class="sd-btn sd-btn-outline" id="resumeBtn">재개</button>
+                    <button class="sd-btn sd-btn-danger" id="resetBtn">초기화</button>
+                </div>
+                <small class="sd-sim-hint">※ 실시간 모드에서만 동작합니다.</small>
+            </div>
+        </div>
+    </aside>
+
+
+    <!-- 🔽 좌측 패널 열기/닫기 토글 버튼 -->
+    <button id="leftToggleBtn" class="sd-left-toggle" type="button">◀</button>
+
+    <!-- ====== RIGHT PANEL : 단일 차트 + 통계 ====== -->
+    <main class="sd-main">
+
+        <!-- 상단 헤더 -->
+        <div class="sd-main-header">
+            <div class="sd-main-title-wrap">
+                <h3 id="chartTitle" class="sd-main-title">실내온도 (TEMP)</h3>
+                <p class="sd-main-sub">
+                    <span id="chartDeviceLabel">ENV_V2_1</span>
+                    &nbsp;•&nbsp;
+                    <span id="chartPeriodLabel">최근 실시간 데이터</span>
+                </p>
+            </div>
+
+            <div class="sd-main-header-right">
+
+                <div class="sd-timestamp-box">
+                    <span>실시간 데이터 시간</span>
+                    <b id="realtimeTimestamp">-</b>
+                </div>
+
+                <div class="sd-event-box">
+                    <span>이상 감지</span>
+                    <b id="realtimeEventCount">0</b>
+                    <span>건</span>
+                </div>
+
+                <!-- 📸 캡처 버튼 -->
+                <button class="sd-btn sd-btn-outline"
+                        style="margin-left:12px"
+                        onclick="captureDashboard()">
+                    📸 화면 저장
+                </button>
+
+            </div>
+
+            <!-- 차트 영역 -->
+            <div id="chartWrapper" class="sd-chart-wrapper">
+                <canvas id="sensorChart"></canvas>
+            </div>
+
+            <!-- 통계 카드 -->
+            <div class="sd-stats-row">
+                <div class="sd-stat-card">
+                    <div class="sd-stat-title">실시간 값</div>
+                    <div class="sd-stat-value" id="statCurrent">-</div>
+                    <div class="sd-stat-unit" id="statUnit">-</div>
+                </div>
+                <div class="sd-stat-card">
+                    <div class="sd-stat-title">평균</div>
+                    <div class="sd-stat-value" id="statAvg">-</div>
+                </div>
+                <div class="sd-stat-card">
+                    <div class="sd-stat-title">최저</div>
+                    <div class="sd-stat-value" id="statMin">-</div>
+                </div>
+                <div class="sd-stat-card">
+                    <div class="sd-stat-title">최고</div>
+                    <div class="sd-stat-value" id="statMax">-</div>
+                </div>
+                <div class="sd-stat-card">
+                    <div class="sd-stat-title">데이터 수</div>
+                    <div class="sd-stat-value" id="statCount">0</div>
+                </div>
+            </div>
+
+            <div id="historyNotice" class="history-notice" style="display:none;">
+                <i class="fa-solid fa-circle-info"></i>
+                HISTORY MODE는 이벤트(Event) 및 이벤트 로그(Event Log)를 지원하지 않습니다.
+                <br>
+                이벤트 기록은 <a href="/sensor/report" target="_blank">리포트 페이지</a>에서 확인하세요.
+            </div>
+
+
+            <!-- 이벤트 로그 토글 버튼 -->
+            <button id="toggleLogBtn" class="log-toggle-btn">이상 감지 로그 보기</button>
+
+            <!-- 슬라이드 로그 패널 -->
+            <div id="logPanel" class="log-panel">
+                <div class="log-header">
+                    <span>실시간 이상 감지 로그</span>
+                    <button id="closeLogBtn" class="log-close-btn">닫기</button>
+                </div>
+                <div id="logList" class="log-content"></div>
+            </div>
+
+            <!-- 🔔 실시간 토스트 알림 컨테이너 -->
+            <div id="realtimeToastContainer" class="sd-toast-container"></div>
+        </div>
+    </main>
+</div>
+
+<!-- 🔴 화면 전체 플래시 오버레이 -->
+<div id="eventFlash"></div>
+
+<script th:inline="javascript">
+    window.currentDevice = /*[[${deviceCode}]]*/ "ENV_V2_1";
+</script>
+
+<script th:src="@{/js/dashboard.js}" defer></script>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

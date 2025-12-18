@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/company.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>COMPANY</h2>
+            <p>비즈니스 강자가 되게 하는 파트너<br/>
+                ㈜그린소프트를 소개합니다.</p>
+        </div>
+    </section>
+
+    <div class="sub-content-container">
+
+        <section class="company-section">
+            <h3 class="section-title">With BizForce</h3>
+            <p class="section-intro">
+                ㈜그린소프트는 머신비전, 인공지능(AI), 빅데이터, 실시간 모니터링 분야의 시스템과 응용SW를 개발하여 보급하고 있는 스마트 팩토리와 스마트 팜 분야의 전문기업입니다.<br>
+                기존 대기업 중심으로 사용되어 오던 첨단 기술과 장비를 지역의 중소기업도 저비용으로 사용 할 수 있도록 제품을 세분화하고 기능을 최적화하여 제공하고자 합니다.<br>
+                디지털 전환(Digital Transformation)을 화두로 하는 4차 산업혁명 시대에 기술개발을 선도하고, 고객과 함께 비즈니스를 펼쳐나가는 기업이 되도록 최선을 다 하겠습니다.
+            </p>
+        </section>
+
+        <section class="company-section">
+            <h3 class="section-title">Mission to BizForce</h3>
+            <div class="mission-image">
+                <img th:src="@{/images/content/img_company01.png}" alt="Mission to BizForce">
+            </div>
+        </section>
+
+        <section class="company-section">
+            <h3 class="section-title">3 ways to Success</h3>
+            <div class="ways-grid">
+                <div class="way-item">
+                    <img th:src="@{/images/content/img_company02.jpg}" alt="Success 1">
+                    <h4>솔루션 완성</h4>
+                    <p>BizMonitor 고도화, 비즈니스 플랫폼 고도화</p>
+                </div>
+                <div class="way-item">
+                    <img th:src="@{/images/content/img_company03.jpg}" alt="Success 2">
+                    <h4>AI 사업 강화</h4>
+                    <p>클라우드 서비스 출시</p>
+                </div>
+                <div class="way-item">
+                    <img th:src="@{/images/content/img_company04.jpg}" alt="Success 3">
+                    <h4>해외시장 진출</h4>
+                    <p>초안 등록</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="company-section">
+            <h3 class="section-title">History</h3>
+            <div class="history-timeline">
+                <div class="history-year-group">
+                    <h4>2022</h4>
+                    <ul>
+                        <li>무선IIoT(Industrial IoT)와 빅데이터 분석 모니터링 플랫폼을 활용한 반도체산업용 AI기반 설비 예지보전 시스템 개발</li>
+                    </ul>
+                </div>
+                <div class="history-year-group">
+                    <h4>2021</h4>
+                    <ul>
+                        <li>실시간 고속 라인 스캔 이미지 기반 반도체 공정 품질관리용 AI모듈 및 SW플랫폼 개발</li>
+                    </ul>
+                </div>
+                <div class="history-year-group">
+                    <h4>2020</h4>
+                    <ul>
+                        <li>빅데이터 기반 생명자원관리시스템 기술사업화 컨설팅</li>
+                        <li>딥러닝 활용 객체식별 모델 수립</li>
+                        <li>다기능 파종기 작업 모니터링 모듈 설계</li>
+                        <li>젖소 영상 행동관찰 AI엔진개발</li>
+                    </ul>
+                </div>
+                <div class="history-year-group">
+                    <h4>2019</h4>
+                    <ul>
+                        <li>축사 영상 빅데이터 기반 행동 패턴 분석 AI엔진 개발</li>
+                        <li>위탁교육(전자정부 표준프레임워크 전문과정)</li>
+                    </ul>
+                </div>
+                <div class="history-year-group">
+                    <h4>2018</h4>
+                    <ul>
+                        <li>2018년 충북 ICT/SW 기업 성장지원사업(충북지식산업진흥원)</li>
+                    </ul>
+                </div>
+                <div class="history-year-group">
+                    <h4>2014</h4>
+                    <ul>
+                        <li>지역특화산업육성사업 공급기업(충북 TP)</li>
+                    </ul>
+                </div>
+                <div class="history-year-group">
+                    <h4>2013</h4>
+                    <ul>
+                        <li>특허획득(지능형 동체 추적 카메라 시스템)</li>
+                        <li>New IT 지원사업 공급기업(충북 TP)</li>
+                        <li>미래철도 신교통 기술기반기업 지원사업 공급기업(충북 TP)</li>
+                    </ul>
+                </div>
+                <div class="history-year-group">
+                    <h4>2012</h4>
+                    <ul>
+                        <li>다중 동체 능동 추적형 CCTV시스템 개발</li>
+                        <li>자본금 증자(50백만원)</li>
+                        <li>차세대에너지산업 비즈니스 생태계 활성화 사업 공급기업(충북 TP)</li>
+                    </ul>
+                </div>
+                <div class="history-year-group">
+                    <h4>2011</h4>
+                    <ul>
+                        <li>(주)그린소프트 법인설립(2011. 08. 22)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="company-section">
+            <h3 class="section-title">인증 및 수상</h3>
+            <div class="cert-grid">
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi01.jpg}" alt="인증 1">
+                </div>
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi02.jpg}" alt="인증 2">
+                </div>
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi03.jpg}" alt="인증 3">
+                </div>
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi04.jpg}" alt="인증 4">
+                </div>
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi05.jpg}" alt="인증 5">
+                </div>
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi06.jpg}" alt="인증 6">
+                </div>
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi07.jpg}" alt="인증 7">
+                </div>
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi08.jpg}" alt="인증 8">
+                </div>
+                <div class="cert-item">
+                    <img th:src="@{/images/content/img_certi09.jpg}" alt="인증 9">
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>그린소프트 - 관리자 대시보드</title>
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-info h3 {
+        margin: 0 0 10px 0;
+        font-size: 0.95rem;
+        color: #888;
+        font-weight: 500;
+    }
+
+    .stat-info p {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .blue-theme { color: #007bff; background: #e7f1ff; }
+    .green-theme { color: #28a745; background: #e8f5e9; }
+    .red-theme { color: #dc3545; background: #fce8e6; }
+    .orange-theme { color: #fd7e14; background: #fff3e0; }
+
+    .section-container {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f1f1f1;
+    }
+
+    .section-title { font-size: 1.1rem; font-weight: bold; color: #333; }
+
+    .simple-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .simple-table th { text-align: left; padding: 12px; background: #f8f9fa; color: #666; font-weight: 600; }
+    .simple-table td { padding: 12px; border-bottom: 1px solid #eee; color: #444; }
+    .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; background: #eee; color: #555; }
+
+    @media (max-width: 1200px) {
+        .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+
+<main class="admin-content">
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰ 메뉴</button>
+  <div style="margin-bottom: 30px;">
+    <h2 style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">관리자 대시보드</h2>
+    <p style="color: #666; font-size: 0.95rem;">
+      오늘 날짜: <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy년 MM월 dd일')}">2024-01-01</span>
+    </p>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="stat-card">
+      <div class="stat-info">
+        <h3>신규 주문 (결제완료)</h3>
+        <p>
+          <span th:text="${newOrders != null ? newOrders : 0}">0</span>건
+        </p>
+      </div>
+      <div class="stat-icon blue-theme">
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-info">
+        <h3>오늘 매출액</h3>
+        <p>
+          <span th:text="${#numbers.formatInteger(todaySales != null ? todaySales : 0, 0, 'COMMA')}">0</span>원
+        </p>
+      </div>
+      <div class="stat-icon green-theme">
+        <i class="fas fa-won-sign"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-info">
+        <h3>이번 달 매출액</h3>
+        <p>
+          <span th:text="${#numbers.formatInteger(monthSales != null ? monthSales : 0, 0, 'COMMA')}">0</span>원
+        </p>
+      </div>
+      <div class="stat-icon orange-theme">
+        <i class="fas fa-chart-line"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-info">
+        <h3>취소/반품 요청</h3>
+        <p style="color: #dc3545;">
+          <span th:text="${claims != null ? claims : 0}">0</span>건
+        </p>
+      </div>
+      <div class="stat-icon red-theme">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-title">최근 신규 주문</span>
+        <a th:href="@{/admin/dbShop/adminOrderList}"
+           style="font-size: 0.85rem; color: #007bff; text-decoration: none;">
+          전체보기 >
+        </a>
+      </div>
+      <table class="simple-table">
+        <thead>
+        <tr>
+          <th>주문번호</th>
+          <th>주문자</th>
+          <th>상품명</th>
+          <th>결제금액</th>
+          <th>상태</th>
+          <th>시간</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${recentOrders == null or recentOrders.isEmpty()}">
+          <td colspan="6" style="text-align: center; padding: 30px;">최근 주문 내역이 없습니다.</td>
+        </tr>
+        <tr th:each="order : ${recentOrders}">
+          <td th:text="${order.id}">1001</td>
+          <td th:text="${order.member.name}">홍길동</td>
+          <td th:text="${order.orderItems[0].product.name + (order.orderItems.size() > 1 ? ' 외 ' + (order.orderItems.size() - 1) + '건' : '')}">상품명</td>
+          <td th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA') + '원'}">50,000원</td>
+          <td>
+                            <span class="status-badge"
+                                  th:style="${order.status.name() == 'PAYMENT_COMPLETED' ? 'background:#e3f2fd; color:#0d47a1;' : ''}"
+                                  th:text="${order.status.description}">결제완료</span>
+          </td>
+          <td th:text="${#temporals.format(order.orderDate, 'MM-dd HH:mm')}">12-10 14:30</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-title">관리 필요 현황</span>
+      </div>
+      <ul style="list-style: none; padding: 0; margin: 0;">
+        <li style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;">
+          <span>📦 배송 준비 필요</span>
+          <a th:href="@{/admin/dbShop/adminOrderList(status='PREPARING')}" style="font-weight: bold; color: #333; text-decoration: none;">
+            <span th:text="${preparingCount != null ? preparingCount : 0}">0</span>건
+          </a>
+        </li>
+
+        <li style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;">
+          <span>💬 신규 문의</span>
+          <a th:href="@{/inquiry/adminList}" style="font-weight: bold; color: #dc3545; text-decoration: none;">
+            <span th:text="${unansweredQna != null ? unansweredQna : 0}">0</span>건
+          </a>
+        </li>
+
+        <li style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;">
+          <span>🚨 신고 접수(게시글/댓글)</span>
+          <a th:href="@{/admin/report/list}" style="font-weight: bold; color: #dc3545; text-decoration: none;">
+            <span th:text="${communityBlindCount != null ? communityBlindCount : 0}">0</span>건
+          </a>
+        </li>
+
+        <li style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;">
+          <span>👤 신규 가입 회원</span>
+          <a th:href="@{/admin/members/list}" style="font-weight: bold; color: #007bff; text-decoration: none;">
+            <span th:text="${newMembers != null ? newMembers : 0}">0</span>명
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function toggleSidebar() {
+      const sidebar = document.querySelector('.admin-sidebar');
+      sidebar.classList.toggle('active');
+  }
+</script>
+
+</body>
+</html>

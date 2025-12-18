@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>고객후기 관리 - 관리자</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+
+<main class="admin-content">
+
+  <button class="btn btn-outline-secondary d-lg-none mb-3" onclick="toggleSidebar()">☰ 메뉴</button>
+
+  <!-- Header -->
+  <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+      <h3 class="fw-bold mb-1">고객후기 관리</h3>
+      <small class="text-secondary">등록된 모든 고객후기 목록입니다.</small>
+    </div>
+
+    <a th:href="@{/admin/review/write}" class="btn btn-primary">
+      + 후기 등록
+    </a>
+  </div>
+
+
+  <!-- Table -->
+  <div class="card shadow-sm p-3">
+
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>작성자</th>
+        <th>제목</th>
+        <th>평점</th>
+        <th>노출</th>
+        <th>등록일</th>
+        <th style="width:180px;">관리</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr th:each="r : ${reviewPage.content}">
+        <td th:text="${r.id}"></td>
+        <td th:text="${r.writerName}"></td>
+
+        <td>
+          <a th:href="@{/admin/review/view/{id}(id=${r.id})}"
+             class="text-decoration-none fw-semibold"
+             th:text="${r.title}"></a>
+        </td>
+
+        <td>
+          <span class="badge bg-warning text-dark" th:text="${r.rating + '점'}"></span>
+        </td>
+
+        <td>
+          <span th:if="${r.visible == 'Y'}">노출</span>
+          <span th:if="${r.visible == 'N'}">비노출</span>
+        </td>
+
+        <td th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd')}"></td>
+
+        <td>
+          <div class="d-flex gap-1">
+
+            <!-- 수정 -->
+            <a th:href="@{/admin/review/edit/{id}(id=${r.id})}"
+               class="btn btn-outline-primary btn-sm">
+              수정
+            </a>
+
+            <!-- 삭제 -->
+            <a th:href="@{/admin/review/delete/{id}(id=${r.id})}"
+               class="btn btn-outline-danger btn-sm"
+               onclick="return confirm('삭제하시겠습니까?');">
+              삭제
+            </a>
+
+            <!-- 노출 토글 -->
+            <a th:href="@{/admin/review/visible/{id}(id=${r.id})}"
+               class="btn btn-outline-secondary btn-sm">
+              노출<br>토글
+            </a>
+
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+
+    <!-- 페이징 -->
+    <nav>
+      <ul class="pagination justify-content-center mt-3">
+
+        <!-- 페이지 -->
+        <li th:each="i : ${#numbers.sequence(0, reviewPage.totalPages - 1)}"
+            class="page-item"
+            th:classappend="${i == currentPage} ? 'active'">
+          <a class="page-link"
+             th:text="${i + 1}"
+             th:href="@{/admin/review/list(page=${i})}">
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+
+  </div>
+
+</main>
+
+
+<script>
+  function toggleSidebar() {
+      document.querySelector('.admin-sidebar').classList.toggle('active');
+  }
+</script>
+
+</body>
+</html>

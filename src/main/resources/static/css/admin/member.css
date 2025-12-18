@@ -1,0 +1,56 @@
+.container {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+table.table th, table.table td {
+  min-width: 120px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+table.table td.address {
+  min-width: 200px;
+}
+
+.admin-menu .btn {
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #495057;
+  border-color: #ced4da;
+  transition: all 0.2s;
+}
+
+.admin-menu .btn:hover {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.admin-menu .btn.active {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.admin-menu .btn + .btn {
+  margin-left: 0.5rem;
+}
+
+#toggleModal .modal-content {
+  padding: 10px 0 0 0;
+}
+
+#toggleModal .modal-title {
+  font-size: 1.2rem;
+}
+
+#toggleModal .btn-primary {
+  font-weight: 600;
+  padding: 0.45rem 1.2rem;
+}
+
+#toggleModal .btn-light {
+  border: 1px solid #dee2e6;
+}

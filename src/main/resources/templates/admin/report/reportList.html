@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>관리자 - 신고/블라인드 관리</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Noto Sans KR', sans-serif; }
+    .list-container { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); max-width: 1500px; margin: 30px auto; }
+    .page-header h2 { font-size: 1.5rem; font-weight: 700; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333; }
+
+    .tab-menu { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px; }
+    .tab-item { padding: 12px 25px; cursor: pointer; font-weight: 500; color: #666; border-bottom: 3px solid transparent; transition: all 0.3s; }
+    .tab-item:hover { color: #333; }
+    .tab-item.active { color: #007bff; border-bottom: 3px solid #007bff; font-weight: 700; }
+
+    .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; margin-top: 10px; }
+    .admin-table th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; font-weight: 600; color: #444; white-space: nowrap; text-align: center; }
+    .admin-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; color: #555; text-align: center; }
+    .admin-table tr:hover { background-color: #f8faff; }
+
+    .content-preview { text-align: left; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; color: #007bff; font-size: 0.9rem; text-decoration: none; cursor: pointer; }
+    .content-preview:hover { text-decoration: underline; color: #0056b3; }
+
+    .file-badge { background: #e9ecef; color: #495057; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; margin-right: 4px; display: inline-block; }
+    .report-badge { background: #dc3545; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+
+    .btn-group { display: flex; gap: 5px; justify-content: center; }
+    .btn-detail { background: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+    .btn-restore { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+    .btn-delete { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+    .btn-detail:hover { background: #138496; }
+    .btn-restore:hover { background: #218838; }
+    .btn-delete:hover { background: #c82333; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-container { background: white; width: 700px; max-height: 85vh; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-bottom: 15px; }
+    .modal-title { font-size: 1.2rem; font-weight: bold; color: #333; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+
+    .info-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; }
+    .info-section h4 { margin-top: 0; font-size: 1rem; color: #007bff; margin-bottom: 8px; }
+    .info-content { color: #555; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.5; }
+
+    .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+    .history-table th { background: #f1f3f5; padding: 8px; border-bottom: 2px solid #ddd; color: #495057; }
+    .history-table td { padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: #666; }
+  </style>
+</head>
+<body>
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+
+<main class="admin-content">
+  <div class="list-container">
+    <div class="page-header">
+      <h2>신고/블라인드 게시글 관리</h2>
+    </div>
+
+    <div class="tab-menu">
+      <div class="tab-item active" onclick="showTab('tab-board')">자유게시판</div>
+      <div class="tab-item" onclick="showTab('tab-board-reply')">자유게시판 댓글</div>
+    </div>
+
+    <div id="tab-board" class="tab-content active">
+      <table class="admin-table">
+        <thead>
+        <tr>
+          <th width="60">ID</th>
+          <th>제목</th>
+          <th>내용(미리보기)</th>
+          <th>첨부파일</th>
+          <th width="120">작성자</th>
+          <th width="80">신고수</th>
+          <th width="150">작성일</th>
+          <th width="200">관리</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${blindedBoards.isEmpty()}"><td colspan="8">신고된 게시글이 없습니다.</td></tr>
+        <tr th:each="item : ${blindedBoards}">
+          <td th:text="${item.id}"></td>
+          <td th:text="${item.title}" style="text-align: left; font-weight: bold;"></td>
+          <td>
+            <a th:href="@{/board/boardContent(id=${item.id})}" target="_blank" class="content-preview" th:text="${item.content}"></a>
+          </td>
+          <td style="text-align: left;">
+            <span th:each="file : ${item.files}" th:text="${file.originalFileName}" class="file-badge"></span>
+            <span th:if="${item.files.isEmpty()}" style="color:#ccc; font-size:0.8rem;">없음</span>
+          </td>
+          <td th:text="${item.member.name} + '(' + ${item.member.mid} + ')'"></td>
+          <td><span class="report-badge" th:text="${item.reportCount}"></span></td>
+          <td th:text="${#temporals.format(item.regDate, 'yyyy-MM-dd HH:mm')}"></td>
+          <td>
+            <div class="btn-group">
+              <button type="button" class="btn-detail"
+                      th:data-id="${item.id}"
+                      th:data-title="${item.title}"
+                      th:data-content="${item.content}"
+                      th:data-writer="${item.member.name} + ' (' + ${item.member.mid} + ')'"
+                      onclick="openBoardModal(this)">상세</button>
+
+              <form th:action="@{/admin/report/unblind}" method="post" onsubmit="return confirm('신고 카운트를 초기화하고 게시글을 복구하시겠습니까?');">
+                <input type="hidden" name="type" value="board">
+                <input type="hidden" name="id" th:value="${item.id}">
+                <button type="submit" class="btn-restore">복구</button>
+              </form>
+              <form th:action="@{/admin/report/delete}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까? 복구할 수 없습니다.');">
+                <input type="hidden" name="type" value="board">
+                <input type="hidden" name="id" th:value="${item.id}">
+                <button type="submit" class="btn-delete">삭제</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="tab-board-reply" class="tab-content">
+      <table class="admin-table">
+        <thead>
+        <tr>
+          <th width="60">ID</th>
+          <th width="80">게시글ID</th>
+          <th>댓글 내용</th>
+          <th width="120">작성자</th>
+          <th width="80">신고수</th>
+          <th width="150">작성일</th>
+          <th width="200">관리</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${blindedBoardReplies.isEmpty()}"><td colspan="7">신고된 댓글이 없습니다.</td></tr>
+        <tr th:each="item : ${blindedBoardReplies}">
+          <td th:text="${item.id}"></td>
+          <td th:text="${item.board.id}"></td>
+          <td style="text-align: left;">
+            <a th:href="@{/board/boardContent(id=${item.board.id})}" target="_blank" class="content-preview" th:text="${item.content}"></a>
+          </td>
+          <td th:text="${item.member.name}"></td>
+          <td><span class="report-badge" th:text="${item.report}"></span></td>
+          <td th:text="${#temporals.format(item.regDate, 'yyyy-MM-dd HH:mm')}"></td>
+          <td>
+            <div class="btn-group">
+              <button type="button" class="btn-detail"
+                      th:data-id="${item.id}"
+                      th:data-content="${item.content}"
+                      th:data-writer="${item.member.name} + ' (' + ${item.member.mid} + ')'"
+                      onclick="openReplyModal(this)">상세</button>
+
+              <form th:action="@{/admin/report/unblind}" method="post" onsubmit="return confirm('복구하시겠습니까?');">
+                <input type="hidden" name="type" value="boardReply">
+                <input type="hidden" name="id" th:value="${item.id}">
+                <button type="submit" class="btn-restore">복구</button>
+              </form>
+              <form th:action="@{/admin/report/delete}" method="post" onsubmit="return confirm('삭제하시겠습니까?');">
+                <input type="hidden" name="type" value="boardReply">
+                <input type="hidden" name="id" th:value="${item.id}">
+                <button type="submit" class="btn-delete">삭제</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div id="detailModal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">상세 정보</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-section">
+        <h4 id="infoTitleLabel" style="display:none;">제목: <span id="infoTitle" style="color:#333;"></span></h4>
+        <h4>작성자: <span id="infoWriter" style="color:#333; font-weight:normal;"></span></h4>
+        <h4>내용:</h4>
+        <div id="infoContent" class="info-content"></div>
+      </div>
+
+      <div class="history-section">
+        <h4 style="border-bottom: 2px solid #333; padding-bottom: 5px; font-size: 1rem;">🚨 신고 내역 로그</h4>
+        <table class="history-table">
+          <thead>
+          <tr>
+            <th>신고자</th>
+            <th>ID</th>
+            <th>신고 사유</th>
+            <th>신고 일시</th>
+          </tr>
+          </thead>
+          <tbody id="historyList">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  /*<![CDATA[*/
+  const contextPath = /*[[@{/}]]*/ "/";
+  /*]]>*/
+
+  function showTab(tabId) {
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => content.classList.remove('active'));
+    const tabs = document.querySelectorAll('.tab-item');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('detailModal').style.display = 'none';
+  }
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('detailModal');
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  }
+
+  function getApiUrl(endpoint) {
+    let base = contextPath === '/' ? '' : contextPath;
+    if (base.endsWith('/')) {
+      base = base.slice(0, -1);
+    }
+    if (!endpoint.startsWith('/')) {
+      endpoint = '/' + endpoint;
+    }
+    return base + endpoint;
+  }
+
+  function openBoardModal(btn) {
+    const id = btn.getAttribute('data-id');
+    const title = btn.getAttribute('data-title');
+    const content = btn.getAttribute('data-content');
+    const writer = btn.getAttribute('data-writer');
+
+    document.getElementById('modalTitle').innerText = "게시글 신고 상세";
+    document.getElementById('infoTitleLabel').style.display = 'block';
+    document.getElementById('infoTitle').innerText = title;
+    document.getElementById('infoWriter').innerText = writer;
+    document.getElementById('infoContent').innerText = content;
+
+    const url = getApiUrl('/admin/report/history/board/' + id);
+    loadReportHistory(url);
+
+    document.getElementById('detailModal').style.display = 'flex';
+  }
+
+  function openReplyModal(btn) {
+    const id = btn.getAttribute('data-id');
+    const content = btn.getAttribute('data-content');
+    const writer = btn.getAttribute('data-writer');
+
+    document.getElementById('modalTitle').innerText = "댓글 신고 상세";
+    document.getElementById('infoTitleLabel').style.display = 'none';
+    document.getElementById('infoWriter').innerText = writer;
+    document.getElementById('infoContent').innerText = content;
+
+    const url = getApiUrl('/admin/report/history/reply/' + id);
+    loadReportHistory(url);
+
+    document.getElementById('detailModal').style.display = 'flex';
+  }
+
+  function loadReportHistory(url) {
+    const tbody = document.getElementById('historyList');
+    tbody.innerHTML = '<tr><td colspan="4">데이터를 불러오는 중입니다...</td></tr>';
+
+    console.log("Fetching URL:", url);
+
+    fetch(url)
+            .then(response => {
+              if (!response.ok) throw new Error('Network response was not ok: ' + response.status);
+              return response.json();
+            })
+            .then(data => {
+              let html = '';
+              if (!data || data.length === 0) {
+                html = '<tr><td colspan="4">신고 내역이 없습니다.</td></tr>';
+              } else {
+                data.forEach(item => {
+                  const date = new Date(item.regDate).toLocaleString();
+                  html += `
+                          <tr>
+                              <td>${item.reporterName}</td>
+                              <td>${item.reporterMid}</td>
+                              <td style="color:#dc3545; font-weight:bold;">${item.reason}</td>
+                              <td>${date}</td>
+                          </tr>
+                      `;
+                });
+              }
+              tbody.innerHTML = html;
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              tbody.innerHTML = '<tr><td colspan="4" style="color:red;">데이터 로드 실패 (로그 확인 필요)</td></tr>';
+            });
+  }
+</script>
+
+</body>
+</html>

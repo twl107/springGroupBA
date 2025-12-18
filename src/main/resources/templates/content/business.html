@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/business.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>BUSINESS</h2>
+            <p>비즈니스 강자가 되게 하는 파트너<br/>
+                ㈜그린소프트의 주요 비즈니스를 소개합니다.</p>
+        </div>
+    </section>
+
+    <div class="sub-content-container">
+
+        <section class="business-item">
+            <div class="item-image">
+                <img th:src="@{/images/content/img_business01.jpg}" alt="Machine vision">
+            </div>
+            <div class="item-description">
+                <span class="item-category">Machine vision</span>
+                <h3>라인 스캔 카메라 시스템</h3>
+                <p>
+                    라인 스캔 카메라 및 머신 비전 소프트웨어를 사용하여 실시간 불량검출 시스템을 구축합니다.
+                    수많은 재료의 완벽한 검사(광택 및 표면 질감)를 수행하는 AI 표면 비전 시스템을 통하여 휨, 스크래치, 핀홀, 크랙, 구멍 등의 불량을 발견하고 대응합니다.
+                </p>
+            </div>
+        </section>
+
+        <section class="business-item layout-reverse">
+            <div class="item-image">
+                <img th:src="@{/images/content/img_business02.jpg}" alt="DA Consulting">
+            </div>
+            <div class="item-description">
+                <span class="item-category">DA Consulting</span>
+                <h3>빅데이터 기반 컨설팅</h3>
+                <p>
+                    DA(Data Analysis)는 대용량의 데이터 집합을 실시간으로 수집하여 빠르게 처리하고 결과를 분석하는 Data Platform을 구축, 이를 통해
+                    문제 해결을 위한 다양한 Solution을 제공합니다. 또한 분석 결과를 시각화하여 표현하고 전달할 수 있도록 시각화하여 쉽게 이해할 수 있도록 합니다.
+                </p>
+            </div>
+        </section>
+
+        <section class="business-item">
+            <div class="item-image">
+                <img th:src="@{/images/content/img_business03.jpg}" alt="AI Solution">
+            </div>
+            <div class="item-description">
+                <span class="item-category">AI Solution</span>
+                <h3>딥러닝 기반 인공지능 엔진</h3>
+                <p>
+                    4차 산업 혁명의 시대에 맞춰 빠르게 변화하고 있는 모든 분야에 월등한 AI Solution을 적용하여 제공합니다.
+                    특히, 제조업과 ICT를 융합한 스마트 팩토리 구축에 중점을 두어, 제조업의 새로운 부가가치를 창출하고 기업이
+                    제조업 혁신을 주도할 수 있도록 환경 조성에 주력합니다.
+                </p>
+            </div>
+        </section>
+
+        <section class="business-item layout-reverse">
+            <div class="item-image">
+                <img th:src="@{/images/content/img_business04.jpg}" alt="Predictive maintenance system">
+            </div>
+            <div class="item-description">
+                <span class="item-category">Predictive maintenance system</span>
+                <h3>예지보전 시스템</h3>
+                <p>
+                    설비의 이상 상태를 감지하고, 이것이 설비의 결함에 의해 발생한 것인지 혹은 일시적 과도현상인지, 또는
+                    설비 자체의 문제인지 등을 진단하여 파악한 후, 어떻게 진전되어 고장으로 이어질 것인가를 예측하여
+                    문제해결 방안을 제시하고 조치하는 설비관리 중심의 예지보전 솔루션입니다.
+                </p>
+            </div>
+        </section>
+
+        <section class="business-item">
+            <div class="item-image">
+                <img th:src="@{/images/content/img_business05.jpg}" alt="Education">
+            </div>
+            <div class="item-description">
+                <span class="item-category">Education</span>
+                <h3>교육</h3>
+                <p>
+                    공장 내 설비와 기계에 사물인터넷(IoT)을 설치하여 공정 데이터를 실시간으로 수집하고, 이를 분석해
+                    스스로 제어할 수 있게 만든 미래형 공장을 만들기 위한 주요기술에 대한 교육을 직접 또는 전문 기관과
+                    연계하여 제공합니다.
+                </p>
+            </div>
+        </section>
+
+    </div>
+
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

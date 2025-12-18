@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>회원 리스트</title>
+
+  <!-- include/bs5 삽입 (Bootstrap + jQuery 등) -->
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+
+  <style>
+    .table th, .table td {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<!-- 공통 네비게이션 바 -->
+<div th:replace="~{include/header :: header}"></div>
+
+<div class="container mt-4">
+  <h2 class="text-center mb-4">회원 리스트</h2>
+
+  <table class="table table-hover text-center">
+    <thead class="table-secondary">
+    <tr>
+      <th>번호</th>
+      <th>성명</th>
+      <th>이메일</th>
+      <th>주소</th>
+      <th>회원등급</th>
+    </tr>
+    </thead>
+    <tbody>
+    <th:block th:each="member : ${memberList}">
+      <tr>
+        <td>[[${member.id}]]</td>
+        <td>[[${member.name}]]</td>
+        <td>[[${member.email}]]</td>
+        <td>[[${member.address}]]</td>
+        <td>[[${member.role}]]</td>
+      </tr>
+    </th:block>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

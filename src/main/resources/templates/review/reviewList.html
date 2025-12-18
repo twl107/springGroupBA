@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>그린소프트 - 고객 후기</title>
+
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+
+  <style>
+    /* =============================
+           SUB VISUAL (Business 스타일)
+        ============================== */
+    .sub-visual.review-visual {
+      width: 100%;
+      height: 260px;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+      /* 어두운 오버레이 느낌 */
+      background-color: rgba(0, 0, 0, 0.45);
+      background-blend-mode: darken;
+    }
+
+    .sub-visual.review-visual .sub-visual-content h2 {
+      font-size: 34px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .sub-visual.review-visual .sub-visual-content p {
+      font-size: 16px;
+      line-height: 1.6;
+      opacity: 0.92;
+    }
+
+    /* =============================
+           CONTENT
+        ============================== */
+    .review-section {
+      margin-bottom: 45px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .section-intro {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    /* 전체 폭을 좀 더 좁게 → 가운데 정렬 */
+    .review-inner {
+      width: 90%;
+      max-width: 1100px;
+      margin: 0 auto 60px;
+    }
+
+    /* =============================
+            REVIEW CARD GRID
+        ============================== */
+    .review-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 28px;
+    }
+
+    .review-card {
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid #e5e7ee;
+      padding: 20px 24px 22px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+      transition: 0.25s ease;
+    }
+
+    .review-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .review-card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #222;
+    }
+
+    .review-card-meta {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    .review-card-meta .dot {
+      margin: 0 6px;
+    }
+
+    .review-thumb {
+      margin-bottom: 12px;
+    }
+
+    .review-thumb img {
+      width: 100%;
+      max-height: 170px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .review-preview {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .review-more {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0c6efd;
+    }
+
+    .review-empty {
+      text-align: center;
+      grid-column: 1 / -1;
+      padding: 30px 0;
+      color: #999;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div th:replace="~{include/header :: header}"></div>
+
+  <main class="main-content">
+
+    <!-- Business 페이지 느낌의 sub visual -->
+    <section class="sub-visual review-visual"
+      th:style="'background-image: url(' + @{/images/content/img_visual_review.jpg} + ');'">
+      <div class="sub-visual-content">
+        <h2>REVIEW</h2>
+        <p>
+          그린소프트 솔루션과 서비스를 경험한<br />
+          실제 고객들의 이야기를 소개합니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- CONTENT -->
+    <div class="sub-content-container">
+      <div class="review-inner">
+
+        <section class="review-section">
+          <h3 class="section-title">고객의 목소리</h3>
+          <p class="section-intro">
+            고객의 피드백은 그린소프트 서비스를 발전시키는 중요한 동력입니다.<br />
+            아래 후기는 실제 프로젝트 경험을 바탕으로 작성되었습니다.
+          </p>
+
+          <div class="review-grid">
+
+            <!-- 후기 카드 -->
+            <div class="review-card" th:each="r :  ${reviewPage.content}">
+              <h4 class="review-card-title" th:text="${r.title}"></h4>
+
+              <div class="review-card-meta">
+                <span th:text="${r.writerName}"></span>
+                <span class="dot">·</span>
+                <span th:text="${r.rating + '점'}"></span>
+                <span class="dot">·</span>
+                <span th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd')}"></span>
+              </div>
+
+              <div class="review-thumb" th:if="${r.imagePath}">
+                <img th:src="@{'/upload/review/' + ${r.imagePath}}" alt="후기 이미지">
+              </div>
+
+              <p class="review-preview" th:text="${#strings.abbreviate(r.content, 120)}"></p>
+
+              <a class="review-more" th:href="@{'/review/view/' + ${r.id}}">자세히 보기 →</a>
+            </div>
+
+            <!-- 등록된 후기가 없을 때 -->
+            <p class="review-empty" th:if="${#lists.isEmpty(reviewPage.content)}">
+              아직 등록된 고객후기가 없습니다.
+            </p>
+
+          </div>
+
+          <!-- 페이징 네비게이션 -->
+          <div style="margin-top: 30px; text-align: center;">
+
+            <a th:if="${!reviewPage.first}" th:href="@{/review/list(page=${currentPage - 1})}"
+              style="margin-right: 10px;">이전</a>
+
+            <span th:each="i : ${#numbers.sequence(0, reviewPage.totalPages - 1)}"
+              th:classappend="${i} == ${currentPage} ? 'page-active'">
+              <a th:href="@{/review/list(page=${i})}" th:text="${i + 1}" style="margin:0 5px;"></a>
+            </span>
+
+            <a th:if="${!reviewPage.last}" th:href="@{/review/list(page=${currentPage + 1})}"
+              style="margin-left: 10px;">다음</a>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+  </main>
+
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/clients.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>Clients</h2>
+            <p>비즈니스 강자가 되게 하는 파트너<br/>
+                ㈜그린소프트의 주요 고객사를 소개합니다.</p>
+        </div>
+    </section>
+    <div class="sub-content-container">
+
+        <section class="client-section">
+            <h3 class="section-title">The way to Success</h3>
+            <p class="section-intro">
+                최고의 결과를 얻기 위해 (주)그린소프트는 솔루션 도입 전부터 실제 업무 적용까지
+                전 과정에 걸쳐 전략적이고 체계적으로 지원합니다.
+            </p>
+
+            <div class="process-grid">
+                <div class="process-item">
+                    <img th:src="@{/images/content/icon_clients01.svg}" alt="솔루션 도입이유 규정">
+                    <span class="step-num">STEP 01</span>
+                    <p>솔루션 도입이유 규정</p>
+                </div>
+                <div class="process-item">
+                    <img th:src="@{/images/content/icon_clients02.svg}" alt="솔루션 도입 책임 부서 지정">
+                    <span class="step-num">STEP 02</span>
+                    <p>솔루션 도입 책임 부서 지정</p>
+                </div>
+                <div class="process-item">
+                    <img th:src="@{/images/content/icon_clients03.svg}" alt="적용 업무 선정">
+                    <span class="step-num">STEP 03</span>
+                    <p>적용 업무 선정</p>
+                </div>
+                <div class="process-item">
+                    <img th:src="@{/images/content/icon_clients04.svg}" alt="업무별 프로세스 분석 / 리뷰">
+                    <span class="step-num">STEP 04</span>
+                    <p>업무별 프로세스 분석 / 리뷰</p>
+                </div>
+                <div class="process-item">
+                    <img th:src="@{/images/content/icon_clients05.svg}" alt="개념검증 (POC)">
+                    <span class="step-num">STEP 05</span>
+                    <p>개념검증 (POC)</p>
+                </div>
+                <div class="process-item">
+                    <img th:src="@{/images/content/icon_clients06.svg}" alt="솔루션 도입 개발">
+                    <span class="step-num">STEP 06</span>
+                    <p>솔루션 도입 개발</p>
+                </div>
+                <div class="process-item">
+                    <img th:src="@{/images/content/icon_clients07.svg}" alt="직원 교육">
+                    <span class="step-num">STEP 07</span>
+                    <p>직원 교육</p>
+                </div>
+                <div class="process-item">
+                    <img th:src="@{/images/content/icon_clients08.svg}" alt="솔루션 적용 / 효과 분석">
+                    <span class="step-num">STEP 08</span>
+                    <p>솔루션 적용 / 효과 분석</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="client-section">
+            <h3 class="section-title">Clients Service Process</h3>
+            <div class="service-process-image">
+                <img th:src="@{/images/content/img_clients01.jpg}" alt="Clients Service Process">
+            </div>
+        </section>
+
+    </div>
+
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/pds.css}">
+
+    <style>
+        .report-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .report-modal-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .report-modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+        }
+
+        .report-modal-title { font-size: 1.2rem; font-weight: bold; color: #333; }
+        .report-modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>게시판</h2>
+        </div>
+    </section>
+
+    <div class="sub-content-container">
+        <div class="pds-form-container">
+            <div class="view-header">
+                <h3 class="view-title">
+                    <span th:if="${dto.isBlind}" style="color:red;">[블라인드 처리된 게시글입니다]</span>
+                    <span th:unless="${dto.isBlind}">
+                         <span th:if="${dto.openSw == 'NO'}">🔒</span> [[${dto.title}]]
+                    </span>
+                </h3>
+                <div class="view-meta">
+                    <span>👤 [[${dto.writerName}]]</span>
+                    <span th:if="${dto.regDate != null}">📅 [[${#temporals.format(dto.regDate, 'yyyy-MM-dd HH:mm')}]]</span>
+                    <span>👁️ [[${dto.readNum}]]</span>
+                    <button type="button" onclick="openUserReportModal()"
+                            class="btn-sm text-danger"
+                            style="border:none; background:none; padding:0; cursor: pointer; font-size: inherit; font-family: inherit;">
+                        🚨 신고
+                    </button>
+                </div>
+            </div>
+            <div class="view-content" th:if="${!dto.isBlind}" th:utext="${dto.content}"></div>
+            <div class="view-content blind-content" th:if="${dto.isBlind}">
+                <div style="text-align:center; padding: 50px 0; color: #888;">
+                    🚨 <strong>다수의 신고(3회 이상)</strong>로 인해 블라인드 처리된 게시글입니다.
+                </div>
+                <th:block sec:authorize="hasRole('ADMIN')">
+                    <div style="margin-top:20px; padding:15px; background:#f8d7da; border:1px solid #f5c6cb; color:#721c24;">
+                        <strong th:text="${blindMessage}"></strong><br>
+                        <span th:utext="${dto.content}"></span>
+                    </div>
+                </th:block>
+            </div>
+            <div class="view-files" th:if="${dto.fileCount > 0}">
+                <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: #333;">💾 첨부파일</h4>
+                <div th:each="file : ${dto.files}" style="margin-bottom: 3px;">
+                    <a th:href="@{/upload/board/{name}(name=${file.saveFileName})}" download class="file-link" style="display: flex; align-items: center; gap: 5px;">
+                        📄 <span th:text="${file.originalFileName}"></span>
+                        <span style="color: #888; font-size: 0.8rem;">([[${file.fileSizeStr}]])</span>
+                    </a>
+                </div>
+            </div>
+            <div style="text-align: center; margin-bottom: 30px; margin-top: 30px;">
+                <div style="display: inline-flex; gap: 15px; align-items: center;">
+                    <a th:href="@{/board/vote/{id}(id=${dto.id}, type='good')}" style="text-decoration: none; text-align: center; cursor: pointer; border: 1px solid #007bff; padding: 8px 20px; border-radius: 50px; transition: 0.3s;">
+                        <span style="font-size: 1.2rem;">👍</span> <span style="font-weight: bold; color: #007bff; font-size: 1.1rem; margin-left: 5px;">[[${dto.good}]]</span>
+                    </a>
+                    <a th:href="@{/board/vote/{id}(id=${dto.id}, type='bad')}" style="text-decoration: none; text-align: center; cursor: pointer; border: 1px solid #dc3545; padding: 8px 20px; border-radius: 50px; transition: 0.3s;">
+                        <span style="font-size: 1.2rem;">👎</span> <span style="font-weight: bold; color: #dc3545; font-size: 1.1rem; margin-left: 5px;">[[${dto.bad}]]</span>
+                    </a>
+                </div>
+            </div>
+            <div class="btn-area" style="margin-bottom: 40px; border-top:none;">
+                <a th:href="@{/board/boardList(page=${pageRequestDTO.page}, keyword=${pageRequestDTO.keyword})}" class="btn-cancel">목록</a>
+                <th:block sec:authorize="isAuthenticated()" th:if="${#authentication.name == dto.email} or ${#authorization.expression('hasRole(''ADMIN'')')}">
+                    <a th:href="@{/board/boardUpdate(id=${dto.id}, page=${pageRequestDTO.page}, keyword=${pageRequestDTO.keyword})}" class="btn-submit">수정</a>
+                    <form th:action="@{/board/delete}" method="post" style="display:inline;" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <input type="hidden" name="id" th:value="${dto.id}">
+                        <button type="submit" class="btn-cancel" style="background-color: #dc3545; color: white; border: none;">삭제</button>
+                    </form>
+                </th:block>
+            </div>
+            <div class="reply-section">
+                <div class="reply-count">💬 댓글 ([[${dto.replyCount}]])</div>
+                <div class="reply-form-box">
+                    <form th:action="@{/board/reply/register}" method="post">
+                        <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <input type="hidden" name="boardId" th:value="${dto.id}">
+                        <textarea name="content" class="reply-textarea" placeholder="댓글을 남겨보세요." required></textarea>
+                        <div class="reply-form-footer">
+                            <button type="submit" class="btn-reply-submit">등록</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="reply-list" style="margin-top: 20px;">
+                    <div th:each="reply : ${replyList}"
+                         class="reply-item"
+                         th:classappend="${reply.depth > 0} ? 'is-child' : ''"
+                         th:style="'padding-left: ' + (${reply.depth} * 30) + 'px;'">
+                        <div class="reply-container">
+                            <div class="reply-line" th:if="${reply.depth > 0}"></div>
+                            <div class="reply-avatar">
+                                <img th:if="${reply.photoName != null and reply.photoName != 'noimage.jpg'}"
+                                     th:src="@{'/upload/member/' + ${reply.photoName}}"
+                                     alt="user"
+                                     style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">
+                                <img th:unless="${reply.photoName != null and reply.photoName != 'noimage.jpg'}"
+                                     src="https://placehold.co/45x45/e9ecef/666666?text=U"
+                                     alt="user"
+                                     style="width: 45px; height: 45px; border-radius: 50%;">
+                            </div>
+                            <div class="reply-body">
+                                <div class="reply-header">
+                                    <div class="reply-info">
+                                        <span class="reply-writer" th:text="${reply.writerName}">작성자</span>
+                                        <span class="reply-date">
+                                            [[${#temporals.format(reply.modDate, 'yyyy-MM-dd HH:mm')}]]
+                                            <span th:if="${reply.regDate != reply.modDate}" style="font-size:0.8em; color:#aaa;">(수정됨)</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="reply-content-view">
+                                    <div class="reply-blind" th:if="${reply.blind}">
+                                        🚨 블라인드 처리된 댓글입니다.
+                                    </div>
+                                    <th:block th:unless="${reply.blind}">
+                                        <div class="reply-text" th:if="${reply.isRemoved}" style="color: #999; font-style: italic;">삭제된 댓글입니다.</div>
+                                        <div class="reply-text" th:unless="${reply.isRemoved}" th:text="${reply.content}"></div>
+                                    </th:block>
+                                </div>
+                                <div class="reply-edit-form" style="display: none;">
+                                    <form th:action="@{/board/reply/update}" method="post">
+                                        <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <input type="hidden" name="id" th:value="${reply.id}">
+                                        <input type="hidden" name="boardId" th:value="${dto.id}">
+                                        <textarea name="content" class="reply-textarea" style="border:1px solid #007bff; background:#fff;" required>[[${reply.content}]]</textarea>
+                                        <div class="reply-form-footer" style="justify-content: flex-start; gap: 10px;">
+                                            <button type="submit" class="btn-reply-submit">수정완료</button>
+                                            <button type="button" class="btn-sm" onclick="toggleEditForm(this)">취소</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="reply-actions" th:unless="${reply.isRemoved or reply.isBlind}">
+                                    <button type="button" class="action-btn" onclick="toggleNestedReplyForm(this)">💬 답글</button>
+                                    <div class="ml-auto" style="display: flex; gap: 10px;">
+                                        <button type="button"
+                                                class="action-btn"
+                                                style="color:#dc3545; border:none; background:none; cursor:pointer;"
+                                                th:onclick="openReplyReportModal([[${reply.id}]])">
+                                            🚨 신고
+                                        </button>
+                                        <th:block sec:authorize="isAuthenticated()" th:if="${#authentication.name == dto.email or #authorization.expression('hasRole(''ADMIN'')')}">
+                                            <button type="button" class="action-btn" onclick="toggleEditForm(this)">✏️ 수정</button>
+                                            <form th:action="@{/board/reply/delete}" method="post" style="display:inline;">
+                                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                                <input type="hidden" name="replyId" th:value="${reply.id}">
+                                                <input type="hidden" name="boardId" th:value="${dto.id}">
+                                                <button type="submit" class="action-btn delete" onclick="return confirm('삭제하시겠습니까?');">🗑️ 삭제</button>
+                                            </form>
+                                        </th:block>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nested-reply-box">
+                            <form th:action="@{/board/reply/register}" method="post">
+                                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="boardId" th:value="${dto.id}">
+                                <input type="hidden" name="parentId" th:value="${reply.id}">
+                                <textarea name="content" class="reply-textarea" placeholder="답글을 입력하세요." required style="background: #fff;"></textarea>
+                                <div class="reply-form-footer">
+                                    <button type="submit" class="btn-reply-submit">답글 등록</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+<th:block th:replace="~{include/messageScript :: alertFragment}"></th:block>
+
+<div id="userReportModal" class="report-modal-overlay">
+    <div class="report-modal-container">
+        <div class="report-modal-header">
+            <h3 class="report-modal-title">🚨 게시글 신고</h3>
+            <button type="button" class="report-modal-close" onclick="closeUserReportModal()">×</button>
+        </div>
+        <div class="report-modal-body">
+            <form th:action="@{/board/report}" method="post">
+                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" name="boardId" th:value="${dto.id}">
+                <div style="margin-bottom: 20px;">
+                    <label for="reportReason" style="display:block; font-weight:bold; margin-bottom: 8px; color:#555;">신고 사유</label>
+                    <select id="reportReason" name="reason" class="reply-textarea" style="height:45px; padding:10px; border:1px solid #ccc; width:100%;" required>
+                        <option value="">사유를 선택해 주세요</option>
+                        <option value="SPAM">스팸/부적절한 홍보</option>
+                        <option value="ABUSIVE">욕설/비하 발언</option>
+                        <option value="ADULT">음란물/청소년 유해 정보</option>
+                        <option value="POLITICAL">과도한 정치적 갈등 조장</option>
+                        <option value="OTHER">기타 사유</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <label for="customReason" style="display:block; font-weight:bold; margin-bottom: 8px; color:#555;">상세 내용 (선택)</label>
+                    <textarea id="customReason" name="customReason" class="reply-textarea" style="height:80px; resize:none; border:1px solid #ccc;" placeholder="기타 사유 선택 시 내용을 입력해주세요."></textarea>
+                </div>
+                <div style="text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeUserReportModal()" style="padding: 10px 20px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">취소</button>
+                    <button type="submit" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">신고하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div id="replyReportModal" class="report-modal-overlay">
+    <div class="report-modal-container">
+        <div class="report-modal-header">
+            <h3 class="report-modal-title">💬 댓글 신고</h3>
+            <button type="button" class="report-modal-close" onclick="closeReplyReportModal()">×</button>
+        </div>
+        <div class="report-modal-body">
+            <form th:action="@{/board/reply/report}" method="post">
+                <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" name="boardId" th:value="${dto.id}">
+                <input type="hidden" id="modalReplyId" name="replyId" value="">
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; font-weight:bold; margin-bottom: 8px; color:#555;">신고 사유</label>
+                    <select name="reason" class="reply-textarea" style="height:45px; padding:10px; border:1px solid #ccc; width:100%;" required>
+                        <option value="">사유를 선택해 주세요</option>
+                        <option value="SPAM">스팸/부적절한 홍보</option>
+                        <option value="ABUSIVE">욕설/비하 발언</option>
+                        <option value="ADULT">음란물/청소년 유해 정보</option>
+                        <option value="POLITICAL">과도한 정치적 갈등 조장</option>
+                        <option value="OTHER">기타 사유</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <label style="display:block; font-weight:bold; margin-bottom: 8px; color:#555;">상세 내용 (선택)</label>
+                    <textarea name="customReason" class="reply-textarea" style="height:80px; resize:none; border:1px solid #ccc;" placeholder="내용을 입력해주세요."></textarea>
+                </div>
+                <div style="text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeReplyReportModal()" style="padding: 10px 20px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">취소</button>
+                    <button type="submit" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">신고 접수</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openUserReportModal() {
+        document.getElementById('userReportModal').style.display = 'flex';
+    }
+
+    function closeUserReportModal() {
+        document.getElementById('userReportModal').style.display = 'none';
+    }
+
+    function openReplyReportModal(replyId) {
+        document.getElementById('modalReplyId').value = replyId;
+        document.getElementById('replyReportModal').style.display = 'flex';
+    }
+
+    function closeReplyReportModal() {
+        document.getElementById('replyReportModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        const boardModal = document.getElementById('userReportModal');
+        const replyModal = document.getElementById('replyReportModal');
+
+        if (event.target === boardModal) {
+            boardModal.style.display = "none";
+        }
+        if (event.target === replyModal) {
+            replyModal.style.display = "none";
+        }
+    }
+
+    function toggleNestedReplyForm(btn) {
+        const item = btn.closest('.reply-item');
+        const formBox = item.querySelector('.nested-reply-box');
+        if (formBox.style.display === 'block') {
+            formBox.style.display = 'none';
+            btn.innerText = '💬 답글';
+            btn.style.color = '#888';
+        } else {
+            document.querySelectorAll('.nested-reply-box').forEach(el => el.style.display = 'none');
+            formBox.style.display = 'block';
+            btn.innerText = '❌ 닫기';
+            btn.style.color = '#333';
+        }
+    }
+
+    function toggleEditForm(btn) {
+        const item = btn.closest('.reply-body');
+        const viewDiv = item.querySelector('.reply-content-view');
+        const editDiv = item.querySelector('.reply-edit-form');
+
+        if (editDiv.style.display === 'none') {
+            document.querySelectorAll('.reply-edit-form').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.reply-content-view').forEach(el => el.style.display = 'block');
+            viewDiv.style.display = 'none';
+            editDiv.style.display = 'block';
+        } else {
+            viewDiv.style.display = 'block';
+            editDiv.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

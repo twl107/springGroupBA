@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>상품 상세</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/dbShop.css}">
+    <style>
+        .product-view-wrap { display: flex; gap: 40px; margin-bottom: 50px; flex-wrap: wrap; }
+        .view-left { flex: 1; min-width: 300px; }
+
+        .view-img-box { width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #eee; background: #f8f9fa; display: flex; align-items: center; justify-content: center; position: relative; }
+        .view-img-box img { width: 100%; height: auto; object-fit: cover; }
+
+        .sold-out-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* 반투명 검정 */
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 2rem; font-weight: 800; letter-spacing: 2px;
+            z-index: 10;
+        }
+
+        .view-right { flex: 1; min-width: 300px; padding: 10px 0; display: flex; flex-direction: column; }
+        .view-category { color: #007bff; font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; display: inline-block; }
+        .view-title { font-size: 2rem; font-weight: 700; color: #333; margin-bottom: 10px; line-height: 1.3; }
+        .view-model { color: #888; font-size: 1rem; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+
+        .view-price-area { margin-bottom: 20px; }
+        .view-price { font-size: 1.8rem; font-weight: 800; color: #333; }
+
+        .sold-out-text { color: #dc3545; font-weight: bold; font-size: 1.1rem; margin-left: 10px; }
+
+        .count-control-box { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 5px; width: 150px; overflow: hidden; margin-bottom: 20px; }
+        .btn-count { width: 40px; height: 40px; border: none; background: #f1f1f1; cursor: pointer; font-size: 1.2rem; font-weight: bold; color: #555; transition: 0.2s; }
+        .btn-count:hover { background: #e2e2e2; }
+        .input-count { flex: 1; height: 40px; border: none; text-align: center; font-size: 1.1rem; font-weight: bold; outline: none; width: 100%; -moz-appearance: textfield; }
+        .input-count::-webkit-outer-spin-button, .input-count::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .total-price-wrap { margin-top: auto; padding: 20px; background: #fdfdfd; border-top: 2px solid #333; border-bottom: 1px solid #ddd; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .total-label { font-weight: bold; font-size: 1.1rem; color: #555; }
+        .total-result { font-weight: 800; font-size: 1.8rem; color: #dc3545; }
+
+        .btn-action-area { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-cart { flex: 1; padding: 18px; background: #333; color: white; border: none; border-radius: 5px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.3s; min-width: 140px; }
+        .btn-cart:hover { background: #000; }
+        .btn-buy { flex: 1; padding: 18px; background: #dc3545; color: white; border: none; border-radius: 5px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.3s; min-width: 140px; }
+        .btn-buy:hover { background: #c82333; }
+        .btn-list { padding: 18px 30px; background: white; color: #555; border: 1px solid #ddd; border-radius: 5px; font-size: 1.1rem; font-weight: bold; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+        .btn-list:hover { background: #f8f9fa; }
+
+        .btn-disabled {
+            background: #e9ecef !important;
+            cursor: not-allowed;
+            color: #adb5bd !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .view-content-area { margin-top: 50px; }
+        .content-header { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #ddd; }
+        .content-fold-wrap { position: relative; max-height: 800px; overflow: hidden; transition: max-height 0.5s ease; }
+        .content-fold-wrap.expanded { max-height: none !important; overflow: visible; }
+        .content-body { line-height: 1.8; color: #444; }
+        .content-body img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+        .btn-more-cover { position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px; }
+        .btn-more-view { padding: 10px 50px; background: white; border: 1px solid #007bff; color: #007bff; font-weight: bold; font-size: 1.1rem; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; }
+        .btn-more-view:hover { background: #007bff; color: white; }
+
+        .review-section { margin-top: 80px; border-top: 2px solid #333; padding-top: 40px; }
+        .review-list { list-style: none; padding: 0; margin: 0; }
+        .review-item { display: flex; padding: 25px 0; border-bottom: 1px solid #eee; gap: 20px; }
+        .review-item:last-child { border-bottom: none; }
+
+        .review-left { width: 140px; flex-shrink: 0; }
+        .review-writer { font-weight: bold; margin-bottom: 5px; color: #333; }
+        .review-date { font-size: 0.85rem; color: #999; }
+        .review-stars { color: #ffd700; font-size: 1.1rem; margin-top: 5px; }
+
+        .review-content { flex: 1; }
+        .review-text { white-space: pre-wrap; line-height: 1.6; color: #444; font-size: 0.95rem; }
+
+        .review-img { margin-top: 15px; }
+        .review-img img {
+            max-width: 150px; max-height: 150px; border-radius: 5px;
+            border: 1px solid #eee; cursor: pointer; transition: transform 0.2s;
+        }
+        .review-img img:hover { transform: scale(1.05); }
+
+        .img-modal-overlay {
+            display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+        }
+        .img-modal-content {
+            max-width: 90%; max-height: 90vh; border-radius: 5px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+        .img-modal-close {
+            position: absolute; top: 20px; right: 35px; color: #f1f1f1;
+            font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .img-modal-close:hover { color: #bbb; }
+    </style>
+</head>
+<body>
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+    <div class="sub-content-container">
+        <div class="product-view-wrap">
+            <div class="view-left">
+                <div class="view-img-box">
+                    <img th:if="${dto.mainImage != null}" th:src="@{'/upload/shop/' + ${dto.mainImage}}" alt="상품이미지">
+                    <span th:unless="${dto.mainImage != null}" style="color:#ccc; padding:100px 0;">이미지 없음</span>
+                    <div class="sold-out-overlay" th:if="${dto.stock <= 0 || dto.deleted}">
+                        SOLD OUT
+                    </div>
+                </div>
+            </div>
+            <div class="view-right">
+                <span class="view-category" th:text="${dto.categoryDes}">CATEGORY</span>
+                <h2 class="view-title" th:text="${dto.name}">상품명</h2>
+                <div class="view-model" th:text="'모델명: ' + ${dto.modelName}">모델명</div>
+                <div class="view-price-area">
+                    <span class="view-price" th:if="${dto.stock > 0 && !dto.deleted}" th:text="${#numbers.formatInteger(dto.price, 0, 'COMMA')}">0</span>
+                    <span style="font-size:1.2rem; font-weight:bold;" th:if="${dto.stock > 0 && !dto.deleted}">원</span>
+                    <span th:if="${dto.stock <= 0 || dto.deleted}" class="view-price" style="color:#aaa; text-decoration: line-through;">
+                        [[${#numbers.formatInteger(dto.price, 0, 'COMMA')}]]원
+                    </span>
+                    <div style="font-size:0.9rem; color:#666; margin-top:5px;">
+                        <span th:if="${dto.stock > 0 && !dto.deleted}">재고: <span th:text="${#numbers.formatInteger(dto.stock, 0, 'COMMA')}">0</span>개</span>
+                        <span th:if="${dto.stock <= 0 || dto.deleted}" class="sold-out-text">[일시 품절]</span>
+                    </div>
+                </div>
+                <form method="post" onsubmit="return checkLogin()" style="display:contents;" th:if="${dto.stock > 0 && !dto.deleted}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <input type="hidden" name="productId" id="productId" th:value="${dto.id}">
+                    <div class="count-control-box">
+                        <button type="button" class="btn-count" onclick="changeCount(-1)">-</button>
+                        <input type="number" name="count" id="count" class="input-count" value="1" min="1" onkeyup="updateTotal()" onchange="updateTotal()">
+                        <button type="button" class="btn-count" onclick="changeCount(1)">+</button>
+                    </div>
+                    <div class="total-price-wrap">
+                        <span class="total-label">총 상품금액</span>
+                        <div>
+                            <span id="totalPriceDisplay" class="total-result" th:text="${#numbers.formatInteger(dto.price, 0, 'COMMA')}">0</span>
+                            <span style="font-size:1.2rem; font-weight:bold; color:#333;">원</span>
+                        </div>
+                    </div>
+                    <div class="btn-action-area">
+                        <button type="button" class="btn-cart" onclick="addToCart()">장바구니</button>
+                        <!-- [수정] th:formaction="@{...}" 적용하여 컨텍스트 패스 포함 -->
+                        <button type="submit" class="btn-buy" th:formaction="@{/order/direct}">바로 구매</button>
+                        <a th:href="@{/dbShop/dbShopList}" class="btn-list">목록</a>
+                    </div>
+                </form>
+                <div class="btn-action-area" th:if="${dto.stock <= 0 || dto.deleted}">
+                    <button type="button" class="btn-cart btn-disabled" disabled>품절</button>
+                    <button type="button" class="btn-buy btn-disabled" disabled>구매 불가</button>
+                    <a th:href="@{/dbShop/dbShopList}" class="btn-list">목록</a>
+                </div>
+            </div>
+        </div>
+        <div class="view-content-area">
+            <h3 class="content-header">상품 상세 정보</h3>
+            <div class="content-fold-wrap" id="contentWrap">
+                <div class="content-body" th:utext="${dto.description}"></div>
+                <div class="btn-more-cover" id="moreBtnCover">
+                    <button type="button" class="btn-more-view" onclick="expandContent()">상품정보 더보기 ∨</button>
+                </div>
+            </div>
+        </div>
+        <div class="review-section">
+            <h3 class="content-header">
+                상품 리뷰
+                <span style="font-weight:normal; font-size:1rem; color:#666;">
+                    ([[${reviews.size()}]]건)
+                </span>
+                <span th:if="${!reviews.isEmpty()}" style="font-size:1.2rem; margin-left:10px; color:#333;">
+                    <span style="color:#ffd700;">★</span>
+                    <span th:text="${#numbers.formatDecimal(#aggregates.avg(reviews.![rating]), 1, 1)}">0.0</span>
+                </span>
+            </h3>
+            <div th:if="${reviews.isEmpty()}" style="text-align: center; padding: 60px; color: #888; background:#f9f9f9; border-radius:10px;">
+                <p>아직 등록된 리뷰가 없습니다.</p>
+            </div>
+            <ul class="review-list" th:unless="${reviews.isEmpty()}">
+                <li th:each="review : ${reviews}" class="review-item">
+                    <div class="review-left">
+                        <div class="review-writer" th:text="${review.member.name}">작성자</div>
+                        <div class="review-date" th:text="${#temporals.format(review.regDate, 'yyyy-MM-dd')}">2024-01-01</div>
+                        <div class="review-stars">
+                            <span th:each="i : ${#numbers.sequence(1, review.rating)}">★</span>
+                            <span th:if="${review.rating < 5}" th:each="i : ${#numbers.sequence(review.rating + 1, 5)}" style="color:#eee;">★</span>
+                        </div>
+                    </div>
+                    <div class="review-content">
+                        <div class="review-text" th:text="${review.content}">리뷰 내용입니다.</div>
+                        <div class="review-img" th:if="${review.reviewImage != null}">
+                            <img th:src="@{'/upload/review/' + ${review.reviewImage}}"
+                                 onclick="openImageModal(this.src)" title="이미지 크게보기">
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div id="imageModal" class="img-modal-overlay" onclick="closeImageModal()">
+        <span class="img-modal-close" onclick="closeImageModal()">&times;</span>
+        <img class="img-modal-content" id="modalImage">
+    </div>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const contextPath = /*[[@{/}]]*/ "/";
+    /*]]>*/
+
+    const unitPrice = [[${dto.price}]];
+    const maxStock = [[${dto.stock}]];
+
+    function changeCount(num) {
+        const countInput = document.getElementById('count');
+        let currentVal = parseInt(countInput.value) || 1;
+        let newVal = currentVal + num;
+
+        if (newVal < 1) { newVal = 1; alert("최소 1개 이상 선택해야 합니다."); }
+        if (newVal > maxStock) { newVal = maxStock; alert("구매 가능한 최대 수량입니다."); }
+
+        countInput.value = newVal;
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const countInput = document.getElementById('count');
+        let count = parseInt(countInput.value);
+        if(isNaN(count) || count < 1) count = 1;
+        if(count > maxStock) { count = maxStock; countInput.value = maxStock; alert("구매 가능한 최대 수량입니다."); }
+
+        const totalPrice = unitPrice * count;
+        document.getElementById('totalPriceDisplay').innerText = comma(totalPrice);
+    }
+
+    function addToCart() {
+        if(!checkLogin()) return;
+
+        const productId = document.getElementById('productId').value;
+        const count = document.getElementById('count').value;
+        const csrfToken = document.querySelector('input[name="_csrf"]').value;
+
+        const formData = new URLSearchParams();
+        formData.append('productId', productId);
+        formData.append('count', count);
+        formData.append('_csrf', csrfToken);
+
+        fetch(contextPath + 'cart/addAsync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        })
+            .then(response => {
+                if(response.ok) {
+                    if(confirm("장바구니에 상품을 담았습니다.\n장바구니로 이동하시겠습니까?")) {
+                        // [수정] contextPath 추가
+                        location.href = contextPath + "cart/cartList";
+                    }
+                } else if (response.status === 401) {
+                    alert("로그인이 필요합니다.");
+                    // [수정] contextPath 추가
+                    location.href = contextPath + "member/memberLogin";
+                } else {
+                    alert("장바구니 담기에 실패했습니다.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("오류가 발생했습니다.");
+            });
+    }
+
+    function expandContent() {
+        const wrap = document.getElementById('contentWrap');
+        const btnCover = document.getElementById('moreBtnCover');
+        wrap.classList.add('expanded');
+        btnCover.style.display = 'none';
+    }
+
+    window.onload = function() {
+        const contentBody = document.querySelector('.content-body');
+        if (contentBody && contentBody.offsetHeight <= 800) {
+            document.getElementById('contentWrap').classList.add('expanded');
+            document.getElementById('moreBtnCover').style.display = 'none';
+        }
+    };
+
+    function checkLogin() {
+        /*<![CDATA[*/
+        const isAuthenticated = [[${#authorization.expression('isAuthenticated()')}]];
+        /*]]>*/
+        if (!isAuthenticated) {
+            alert("로그인 후 이용 가능합니다.");
+            // [수정] contextPath 추가
+            location.href = contextPath + 'member/memberLogin';
+            return false;
+        }
+        return true;
+    }
+
+    function comma(str) {
+        str = String(str);
+        return str.replace(/(\d)(?=(?:\d{3})+(?!\d))/g, '$1,');
+    }
+
+    function openImageModal(src) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        modal.style.display = "flex";
+        modalImg.src = src;
+    }
+
+    function closeImageModal() {
+        document.getElementById('imageModal').style.display = "none";
+    }
+</script>
+
+</body>
+</html>

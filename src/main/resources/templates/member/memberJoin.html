@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>회원가입</title>
+
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <!-- Bootstrap + jQuery -->
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+      max-width:800px;
+      padding: 30px;
+      margin-top: 100px !important;
+    }
+    .fieldError {
+      color:#f00; font-size:12px;
+    }
+    p {
+      text-align: left;
+    }
+    .form-box {
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      padding: 8px;
+    }
+    .form-check {
+      padding-left: 0;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    'use strict';
+
+    // 주소
+    function execDaumPostcode() {
+      new daum.Postcode({
+        oncomplete: function(data) {
+          document.getElementById('postcode').value = data.zonecode;      // 우편번호
+          document.getElementById('roadAddress').value = data.address;    // 기본주소
+          document.getElementById('detailAddress').focus();               // 상세주소 포커스
+        }
+      }).open();
+    }
+
+    // 회원가입 처리
+    let idCheckSw = 0;
+    let nickCheckSw = 0;
+    let emailCheckSw = 0;
+    let timeLimit = 120;
+    let interval;
+    let isVerified = false;
+
+    // 정규식
+    const regName = /^[가-힣a-zA-Z]{2,10}$/;
+    const regMid = /^[a-zA-Z0-9_]{4,20}$/;
+    const regNickName = /^[가-힣a-zA-Z0-9_]{2,10}$/;
+    // 이메일 앞부분 (input1) 체크
+    const regEmailLocal = /^[A-Za-z0-9._%+-]+$/;
+    // 전체 이메일 체크
+    const regEmail = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    const regTel = /^\d{2,3}-\d{3,4}-\d{4}$/;
+
+    // 회원가입
+    function memberJoin() {
+      const form = document.forms['memberForm'];
+      if (!fieldsPlus()) return false;
+
+      const name = form.elements['name'];
+      const mid = form.elements['mid'];
+      const pwd = form.elements['password'];
+      const pwdCheck = form.elements['passwordCheck'];
+      const nickName = form.elements['nickName'];
+      const email = document.getElementById('emailHidden');
+      const email1 = form.elements['email1'];
+      const tel = form.elements['tel'];
+      const gender = document.querySelector('input[name="gender"]:checked');
+
+      if (!regName.test(name.value)) {
+          alert('이름은 2~10자리 한글/영문만 가능합니다.');
+          name.focus();
+          return false;
+      }
+      if (!regMid.test(mid.value)) {
+          alert('아이디는 4~20자리 영문/숫자/_만 가능합니다.');
+          mid.focus();
+          return false;
+      }
+      if (pwd.value.length < 4 || pwd.value.length > 20) {
+          alert('비밀번호는 4~20자리로 입력하세요.');
+          pwd.focus();
+          return false;
+      }
+      if (pwd.value !== pwdCheck.value) {
+          alert('비밀번호가 일치하지 않습니다.');
+          pwd.focus();
+          return false;
+      }
+      if (!regNickName.test(nickName.value)) {
+          alert('닉네임은 2~10자리 한글/영문/숫자/_만 가능합니다.');
+          nickName.focus();
+          return false;
+      }
+
+      // 이메일 검증
+      if (!regEmailLocal.test(email1.value.trim())) {
+          alert('이메일은 영문/숫자/일부 특수문자만 가능합니다.');
+          email1.focus();
+          return false;
+      }
+      if (!regEmail.test(email.value.trim())) {
+          alert('이메일 전체 형식이 올바르지 않습니다.');
+          email1.focus();
+          return false;
+      }
+
+      if (tel.value && !regTel.test(tel.value)) {
+          alert('전화번호 형식을 확인하세요. (000-0000-0000)');
+          form.tel2.focus();
+          return false;
+      }
+
+      if (emailCheckSw === 0) {
+          alert('이메일 인증을 완료해주세요.');
+          return false;
+      }
+      if (idCheckSw === 0) {
+          alert('아이디 중복확인을 해주세요.');
+          mid.focus();
+          return false;
+      }
+      if (nickCheckSw === 0) {
+          alert('닉네임 중복확인을 해주세요.');
+          nickName.focus();
+          return false;
+      }
+      if (!gender) {
+          alert('성별을 선택해주세요.');
+          return false;
+      }
+
+      // 파일 체크
+      const fileInput = form.file;
+      if (fileInput && fileInput.value) {
+          const file = fileInput.files[0];
+          const ext = file.name.split('.').pop().toLowerCase();
+          if (!['jpg','jpeg','png','gif'].includes(ext)) {
+              alert('이미지 파일만 업로드 가능합니다.');
+              return false;
+          }
+          if (file.size > 10 * 1024 * 1024) {
+              alert('파일 용량은 10MB 이하만 가능합니다.');
+              return false;
+          }
+      }
+
+      form.submit();
+    }
+
+    // 주소, 전화, 이메일 합치기
+    function fieldsPlus() {
+        const form = document.forms['memberForm'];
+
+        const address = form.elements['address'] || document.getElementById('address');
+        const telHidden = form.elements['tel'] || document.getElementById('tel');
+        const emailHidden = form.elements['email'] || document.getElementById('emailHidden');
+
+        if (!address || !telHidden || !emailHidden) {
+            console.error('숨겨진 필드가 존재하지 않습니다.');
+            return false;
+        }
+
+        const postcode = form.elements['postcode']?.value?.trim() || '';
+        const roadAddress = form.elements['roadAddress']?.value?.trim() || '';
+        const detailAddress = form.elements['detailAddress']?.value?.trim() || '';
+
+        // 주소 합치기
+        address.value = [postcode, roadAddress, detailAddress].filter(v => v !== '').join('/');
+
+        // 전화번호 합치기
+        telHidden.value = [
+            form.elements['tel1'].value.trim(),
+            form.elements['tel2'].value.trim(),
+            form.elements['tel3'].value.trim()
+        ].join('-');
+
+        // 이메일 합치기
+        const email2 = document.getElementById("email2Hidden").value.trim();
+        emailHidden.value = form.elements['email1'].value.trim() + '@' + email2;
+
+        return true;
+    }
+
+    // 아이디 중복 체크
+    function idCheck() {
+      const midInput = document.querySelector('input[name="mid"]');
+      const mid = midInput.value.trim();
+
+      if (!regMid.test(mid)) {
+          alert('아이디 형식 오류');
+          midInput.focus();
+          return false;
+      }
+
+      const token = $("meta[name='_csrf']").attr("content");
+      const header = $("meta[name='_csrf_header']").attr("content");
+
+      $.ajax({
+          url: /*[[@{/member/idCheck}]]*/,
+          type: 'POST',
+          data: { mid },
+          beforeSend: function(xhr) {
+              xhr.setRequestHeader(header, token);
+          },
+          success: function(res) {
+              // Spring에서 true/false 혹은 "true"/"false" 반환 처리
+              if (res === true || res === 'true') {
+                  midInput.classList.remove('is-valid');
+                  midInput.classList.add('is-invalid');
+                  alert('사용중인 아이디입니다.');
+                  midInput.focus();
+                  idCheckSw = 0;
+                  document.getElementById('idChecked').value = '0';
+              } else {
+                  midInput.classList.remove('is-invalid');
+                  midInput.classList.add('is-valid');
+                  alert('사용 가능한 아이디입니다.');
+                  idCheckSw = 1;
+                  document.getElementById('idChecked').value = '1';
+                  midInput.readOnly = true;
+              }
+          },
+          error: function() {
+              alert('전송 오류');
+          }
+      });
+    }
+
+    // 닉네임 중복 체크
+    function nickCheck() {
+      const nickInput = document.querySelector('input[name="nickName"]');
+      const nickName = nickInput.value.trim();
+
+      if (!regNickName.test(nickName)) {
+          alert('닉네임 형식 오류');
+          nickInput.focus();
+          return false;
+    }
+
+    const token = $("meta[name='_csrf']").attr("content");
+    const header = $("meta[name='_csrf_header']").attr("content");
+
+    $.ajax({
+        url: /*[[@{/member/nickNameCheck}]]*/,
+        type: 'POST',
+        data: { nickName },
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader(header, token);
+        },
+        success: function(res) {
+            if (res === true || res === 'true') {
+                nickInput.classList.remove('is-valid');
+                nickInput.classList.add('is-invalid');
+                alert('사용중인 닉네임입니다.');
+                nickInput.focus();
+                nickCheckSw = 0;
+                document.getElementById('nickChecked').value = '0';
+            } else {
+                nickInput.classList.remove('is-invalid');
+                nickInput.classList.add('is-valid');
+                alert('사용 가능한 닉네임입니다.');
+                nickCheckSw = 1;
+                document.getElementById('nickChecked').value = '1';
+                nickInput.readOnly = true;
+            }
+        },
+        error: function() {
+            alert('전송 오류');
+        }
+      });
+    }
+
+    // 이메일 인증번호 발송
+    function emailNumSend() {
+      const email = document.getElementById("email1").value + "@" + document.getElementById("email2Hidden").value;
+
+      if (!regEmail.test(email)) {
+          alert("이메일 형식 오류");
+          return false;
+      }
+
+      // 발송 중 스피너
+      let spin = "<div class='text-center'><div class='spinner-border text-muted'></div> 메일 발송중입니다. 잠시만 기다려주세요 <div class='spinner-border text-muted'></div></div>";
+      $("#emailSpin").html(spin);
+
+      const token = $("meta[name='_csrf']").attr("content");
+      const header = $("meta[name='_csrf_header']").attr("content");
+
+      $.ajax({
+          url: /*[[@{/member/memberEmailCheck}]]*/,
+          type: "POST",
+          beforeSend: function(xhr) {
+              xhr.setRequestHeader(header, token);
+          },
+          data: { email },
+          success: function(res) {
+              if(res == 1 || res === "1") {
+                  alert("인증번호가 발송되었습니다.\n메일 확인 후 인증번호를 입력해주세요.");
+                  $("#emailSpin").empty();
+                  createEmailCheckForm();
+                  timer();
+              } else {
+                  alert("인증 버튼을 다시 눌러주세요!");
+              }
+          },
+          error: () => alert("전송 오류")
+      });
+    }
+
+    // 인증번호 입력 폼 생성
+    function createEmailCheckForm() {
+      const container = document.getElementById('addContent');
+      container.innerHTML = "";
+
+      const div = document.createElement('div');
+      div.className = 'input-group';
+
+      div.innerHTML = `
+          <input type="text" name="checkKey" id="checkKey"
+                 class="form-control"
+                 placeholder="인증번호 입력">
+
+          <span id="timeLimit" class="input-group-text"></span>
+
+          <button type="button" class="btn btn-primary" onclick="emailNumCheckOk()">확인</button>
+          <button type="button" class="btn btn-warning" onclick="emailNumSend()">재전송</button>
+      `;
+
+      container.appendChild(div);
+    }
+
+    // 인증번호 확인
+    function emailNumCheckOk() {
+        const checkKey = $('#checkKey').val().trim();
+        if (!checkKey) {
+            alert('인증번호 입력');
+            $('#checkKey').focus();
+            return false;
+        }
+
+        const container = document.getElementById('addContent');
+
+        const token = $("meta[name='_csrf']").attr("content");
+        const header = $("meta[name='_csrf_header']").attr("content");
+
+        $.ajax({
+            type: 'POST',
+            url: /*[[@{/member/memberEmailCheckOk}]]*/,
+            data: { checkKey },
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader(header, token);
+            },
+            success: function(res) {
+              if (res == 1) {
+                isVerified = true;
+
+                container.innerHTML = `
+                    <div class="input-group">
+                        <input type="text" class="form-control text-success" value="인증 완료!" readonly>
+                    </div>
+                `;
+                emailCheckSw = 1;
+              } else {
+                container.innerHTML = `
+                    <div class="input-group">
+                        <input type="text" class="form-control text-danger" value="인증 실패" readonly>
+                    </div>
+                `;
+              }
+            },
+            error: function() {
+                alert('전송 오류');
+            }
+        });
+    }
+
+    // 메일 인증 타이머
+    function timer() {
+      clearInterval(interval);
+      timeLimit = 120;
+      isVerified = false;
+
+      interval = setInterval(() => {
+        $("#timeLimit").text(`남은시간: ${timeLimit}초`);
+
+        if (timeLimit <= 0) {
+          clearInterval(interval);
+
+          // 인증하지 않은 경우
+          if (!isVerified) {
+            $.post('/member/memberEmailCheckNo')
+              .done(() => alert('인증시간 만료'));
+          }
+          return;
+        }
+        timeLimit--;
+      }, 1000);
+    }
+
+    // 이메일 select/input 처리
+    function toggleEmailInput(value) {
+        const hidden = document.getElementById("email2Hidden");
+        const select = document.getElementById("email2Select");
+        let input = document.getElementById("email2Input");
+
+        if (value === "inputEmail") {
+            if (!input) {
+                input = document.createElement("input");
+                input.type = "text";
+                input.id = "email2Input";
+                input.name = "email2";
+                input.className = "form-control";
+                input.placeholder = "직접 입력";
+                select.parentNode.replaceChild(input, select);
+                input.addEventListener("input", () => hidden.value = input.value.trim());
+            }
+            input.style.display = "block";
+            input.focus();
+        } else {
+            hidden.value = value;
+            if (input) input.style.display = "none";
+        }
+    }
+
+    // 미리보기 프로필 이미지
+    function previewImage(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      // 이미지 확장자 체크
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+        alert('이미지 파일만 업로드 가능합니다.');
+        input.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById('photoDemoPreview');
+        preview.src = e.target.result;
+        document.getElementById('previewContainer').style.display = 'block';
+      }
+      reader.readAsDataURL(file);
+    }
+
+    // 페이지 로드 시 이메일 처리
+    document.addEventListener("DOMContentLoaded", () => {
+      const hidden = document.getElementById("email2Hidden");
+      const select = document.getElementById("email2Select");
+      const domainList = ["naver.com", "gmail.com", "daum.net"];
+
+      // hidden 값 없으면 기본값 넣기
+      if (!hidden.value) hidden.value = "naver.com";
+
+      // hidden 값이 직접입력 도메인일 경우
+      if (!domainList.includes(hidden.value)) {
+          toggleEmailInput("inputEmail");
+          document.getElementById("email2Input").value = hidden.value;
+      } else {
+          select.value = hidden.value;
+      }
+    });
+
+    function clearError(id) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '';
+    }
+  </script>
+</head>
+<body>
+<div th:replace="~{include/header :: header}"></div>
+<div th:replace="~{include/message :: alertMessage}"></div>
+
+<div class="container my-5">
+  <h2 class="text-center mb-4">회원가입</h2>
+
+  <form th:action="@{/member/memberJoin}" th:object="${memberDto}" method="post" name="memberForm" enctype="multipart/form-data">
+    <!-- 이름 -->
+    <div class="mb-3 row">
+      <label class="col-sm-3 col-form-label text-end">이름</label>
+      <div class="col-sm-9">
+        <input type="text" th:field="*{name}" class="form-control" oninput="clearError('nameError')" placeholder="2~10자리 한글/영문">
+        <div th:if="${#fields.hasErrors('name')}" id="nameError" th:errors="*{name}" class="fieldError"></div>
+      </div>
+    </div>
+
+    <!-- 아이디 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">아이디</label>
+      <div class="col-sm-6">
+        <input type="text" th:field="*{mid}" class="form-control" oninput="clearError('midError')" placeholder="4~20자리 영문/숫자/_">
+        <input type="hidden" id="idChecked" name="idChecked" th:value="${idChecked ?: 0}">
+        <div th:if="${#fields.hasErrors('mid')}" id="midError" th:errors="*{mid}" class="fieldError"></div>
+      </div>
+      <div class="col-sm-3">
+        <button type="button" class="btn btn-secondary w-100" onclick="idCheck()">중복체크</button>
+      </div>
+    </div>
+
+    <!-- 닉네임 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">닉네임</label>
+      <div class="col-sm-6">
+        <input type="text" th:field="*{nickName}" class="form-control" oninput="clearError('nickError')" placeholder="2~10자리 한글/영문/숫자/_">
+        <input type="hidden" id="nickChecked" name="nickChecked" th:value="${nickChecked ?: 0}">
+        <div th:if="${#fields.hasErrors('nickName')}" id="nickError" th:errors="*{nickName}" class="fieldError"></div>
+      </div>
+      <div class="col-sm-3">
+        <button type="button" class="btn btn-secondary w-100" onclick="nickCheck()">중복체크</button>
+      </div>
+    </div>
+
+
+    <!-- 비밀번호 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">비밀번호</label>
+      <div class="col-sm-9">
+        <input type="password" th:field="*{password}" class="form-control" oninput="clearError('pwdError')" placeholder="4~20자리">
+        <div th:if="${#fields.hasErrors('password')}" id="pwdError" th:errors="*{password}" class="fieldError"></div>
+      </div>
+    </div>
+
+    <!-- 비밀번호 확인 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">비밀번호 확인</label>
+      <div class="col-sm-9">
+        <input type="password" th:field="*{passwordCheck}" class="form-control" oninput="clearError('pwdCheckError')" placeholder="같은 비밀번호">
+        <div th:if="${#fields.hasErrors('passwordCheck')}" id="pwdCheckError" th:errors="*{passwordCheck}" class="fieldError"></div>
+      </div>
+    </div>
+
+    <!-- 이메일 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">이메일</label>
+      <div class="col-sm-9 d-flex gap-2 align-items-center">
+        <!-- 이메일 계정 -->
+        <input type="text" style="height: 38px; !important" th:field="*{email1}" id="email1" class="form-control form-control-sm flex-fill" oninput="clearError('emailError')" placeholder="영문/숫자/일부 특수문자">
+
+        <!-- @ -->
+        <span class="align-self-center"> @ </span>
+
+        <!-- 도메인 선택 -->
+        <select id="email2Select" class="form-select form-select-sm flex-fill" style="height: 38px; !important" onchange="toggleEmailInput(this.value)">
+          <option value="naver.com" selected>naver.com</option>
+          <option value="gmail.com">gmail.com</option>
+          <option value="daum.net">daum.net</option>
+          <option value="inputEmail">직접입력</option>
+        </select>
+
+        <input type="hidden" th:field="*{email2}" id="email2Hidden">
+        <input type="hidden" name="email" id="emailHidden">
+
+        <!-- 인증 버튼 -->
+        <button type="button" class="btn btn-primary" style="width: 130px; !important" onclick="emailNumSend()">인증</button>
+      </div>
+      <div class="offset-sm-3 col-sm-9 mt-1 fieldError" id="emailError" th:if="${#fields.hasErrors('email1')}" th:errors="*{email1}"></div>
+
+      <div class="offset-sm-3 col-sm-9 mt-1" id="emailSpin"></div>
+      <div class="offset-sm-3 col-sm-9 mt-1" id="addContent"></div>
+    </div>
+
+    <!-- 전화번호 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">전화번호</label>
+      <div class="col-sm-9 d-flex gap-2">
+        <select th:field="*{tel1}" class="form-select w-25">
+          <option value="010">010</option>
+          <option value="02">02</option>
+          <option value="031">031</option>
+        </select>
+        <input type="text" th:field="*{tel2}" class="form-control w-25" oninput="clearError('telError')" maxlength="4">
+        <input type="text" th:field="*{tel3}" class="form-control w-25" oninput="clearError('telError')" maxlength="4">
+
+        <input type="hidden" name="tel" id="telHidden">
+      </div>
+      <div class="offset-sm-3 col-sm-9 mt-1 fieldError" id="telError" th:if="${#fields.hasErrors('tel1')}" th:errors="*{tel1}"></div>
+
+    </div>
+
+    <!-- 주소 -->
+    <div class="mb-3 row">
+      <label class="col-sm-3 col-form-label text-end">주소</label>
+      <div class="col-sm-9">
+        <div class="input-group mb-2">
+          <input type="text" id="postcode" th:field="*{postcode}" class="form-control" placeholder="우편번호" readonly>
+          <button type="button" class="btn btn-primary" onclick="execDaumPostcode()">주소 검색</button>
+        </div>
+
+        <input type="text" id="roadAddress" th:field="*{roadAddress}" class="form-control mb-2" placeholder="기본 주소" readonly>
+        <input type="text" id="detailAddress" th:field="*{detailAddress}" class="form-control" placeholder="상세주소 입력">
+
+        <!-- 전체 주소 필드 -->
+        <input type="hidden" name="address" id="addressHidden">
+      </div>
+    </div>
+
+    <!-- 성별 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">성별</label>
+      <div class="col-sm-9">
+        <div class="d-flex border p-2 rounded">
+          <div class="form-check form-check-inline">
+            <input id="genderMale" th:field="*{gender}" type="radio" value="남자">
+            <label for="genderMale" class="form-check-label">남자</label>
+          </div>
+
+          <div class="form-check form-check-inline">
+            <input id="genderFemale" th:field="*{gender}" type="radio" value="여자">
+            <label for="genderFemale" class="form-check-label">여자</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 생일 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">생일</label>
+      <div class="col-sm-9">
+        <input th:field="*{birthday}" type="date" class="form-control">
+      </div>
+    </div>
+
+    <!-- 자기소개 -->
+    <div class="mb-3 row align-items-start">
+      <label class="col-sm-3 col-form-label text-end">자기소개</label>
+      <div class="col-sm-9">
+        <textarea th:field="*{content}" rows="4" class="form-control"></textarea>
+      </div>
+    </div>
+
+    <!-- 프로필 사진 -->
+    <div class="mb-3 row align-items-start">
+      <label class="col-sm-3 col-form-label text-end">이미지 등록</label>
+      <div class="col-sm-9">
+        <!-- 파일 선택 -->
+        <input type="file" name="file" id="file" class="form-control mb-2" onchange="previewImage(this)" />
+
+        <!-- 미리보기 -->
+        <div id="previewContainer" style="display:none;">
+          <img id="photoDemoPreview" class="rounded-circle border shadow-sm" width="120" height="120" alt="미리보기">
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <button type="button"
+              class="btn btn-outline-primary"
+              onclick="memberJoin()">
+        회원가입
+      </button>
+      <a href="@{/member/memberLogin}" class="btn btn-secondary">돌아가기</a>
+    </div>
+
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+  </form>
+</div>
+
+<div th:replace="~{include/footer :: footer}"></div>
+</body>
+</html>

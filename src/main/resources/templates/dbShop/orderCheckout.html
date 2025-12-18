@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>주문/결제</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/dbShop.css}">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+    <style>
+        .order-container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        .page-title { font-size: 1.8rem; font-weight: 700; color: #333; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+
+        .order-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 40px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .order-layout { grid-template-columns: 1fr; }
+        }
+
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #333; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .right-column .section-title { margin-top: 0; }
+        .left-column .section-title:first-child { margin-top: 0; }
+
+        .delivery-form { display: grid; grid-template-columns: 100px 1fr; gap: 12px 15px; align-items: center; }
+        .form-label { font-weight: 600; color: #555; font-size: 0.95rem; }
+        .form-input { padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%; font-size: 0.95rem; }
+        .btn-post { padding: 10px 15px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; }
+        .btn-post:hover { background: #444; }
+
+        .right-column { background: #fff; padding: 25px; border: 1px solid #eee; border-radius: 8px; position: sticky; top: 20px; }
+        .order-item-list { margin-bottom: 30px; }
+        .order-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 0; border-bottom: 1px solid #eee; }
+        .order-item:last-child { border-bottom: none; }
+        .item-info-group { display: flex; }
+        .item-img { width: 60px; height: 60px; border-radius: 5px; object-fit: cover; margin-right: 15px; border: 1px solid #eee; }
+        .item-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; line-height: 1.3; }
+        .item-meta { font-size: 0.85rem; color: #777; }
+        .item-price { font-weight: bold; font-size: 1rem; text-align: right; }
+
+        .payment-box { border-top: 2px solid #333; padding-top: 25px; text-align: right; }
+        .price-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; color: #666; }
+        .price-row.total { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; align-items: center; }
+        .pay-label { font-size: 1.1rem; font-weight: 700; color: #333; }
+        .pay-amount { font-size: 1.8rem; font-weight: 800; color: #dc3545; }
+        .unit { font-size: 1.1rem; font-weight: 600; color: #333; margin-left: 2px; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 25px; }
+        .btn-back, .btn-pay { flex: 1; padding: 15px 0; border-radius: 5px; font-size: 1rem; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; transition: 0.2s; }
+        .btn-back { background: #fff; color: #555; border: 1px solid #ccc; }
+        .btn-back:hover { background: #f1f1f1; border-color: #bbb; color: #333; }
+        .btn-pay { background: #222; color: white; border: none; font-size: 1.1rem; }
+        .btn-pay:hover { background: #000; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    </style>
+</head>
+<body>
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+    <div class="sub-content-container order-container">
+
+        <h2 class="page-title">주문/결제</h2>
+
+        <div class="order-layout">
+
+            <div class="left-column">
+                <h3 class="section-title">배송지 정보</h3>
+                <div class="delivery-form" th:with="addrParts=${member.address != null ? #strings.arraySplit(member.address, '/') : null}">
+
+                    <label class="form-label">받는 분</label>
+                    <input type="text" id="receiverName" class="form-input" th:value="${member.name}" placeholder="이름을 입력하세요">
+
+                    <label class="form-label">연락처</label>
+                    <input type="text" id="receiverPhone" class="form-input" th:value="${member.tel}" placeholder="연락처를 입력하세요">
+
+                    <label class="form-label">우편번호</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="zipcode" class="form-input" placeholder="우편번호" readonly
+                               th:value="${addrParts != null and addrParts.length > 0 ? addrParts[0] : ''}">
+                        <button type="button" class="btn-post" onclick="execDaumPostcode()">우편번호 찾기</button>
+                    </div>
+
+                    <label class="form-label">기본 주소</label>
+                    <input type="text" id="address1" class="form-input" placeholder="기본주소" readonly
+                           th:value="${addrParts != null and addrParts.length > 1 ? addrParts[1] : ''}">
+
+                    <label class="form-label">상세 주소</label>
+                    <input type="text" id="address2" class="form-input" placeholder="상세주소를 입력해주세요"
+                           th:value="${addrParts != null and addrParts.length > 2 ? addrParts[2] : ''}">
+
+                    <label class="form-label">요청사항</label>
+                    <div>
+                        <select id="requestSelect" class="form-input" onchange="handleRequestChange()">
+                            <option value="">배송 시 요청사항을 선택해주세요</option>
+                            <option value="부재 시 문 앞에 놓아주세요">부재 시 문 앞에 놓아주세요</option>
+                            <option value="배송 전 미리 연락주세요">배송 전 미리 연락주세요</option>
+                            <option value="경비실에 맡겨주세요">경비실에 맡겨주세요</option>
+                            <option value="택배함에 넣어주세요">택배함에 넣어주세요</option>
+                            <option value="direct">직접 입력</option>
+                        </select>
+                        <input type="text" id="requestInput" class="form-input"
+                               style="display:none; margin-top:8px;"
+                               placeholder="요청사항을 입력해주세요 (최대 50자)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <h3 class="section-title">주문 상품 정보</h3>
+                <div class="order-item-list">
+                    <div th:each="item : ${orderList}" class="order-item">
+                        <input type="hidden" name="orderItemIds" th:value="${item.cartItemId}">
+                        <div class="item-info-group">
+                            <img th:if="${item.mainImage != null}" th:src="@{'/upload/shop/' + ${item.mainImage}}" class="item-img">
+                            <div class="item-info">
+                                <div class="item-name" th:text="${item.name}">상품명</div>
+                                <div class="item-meta">
+                                    수량: <span th:text="${item.count + '개'}">1개</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="item-price" th:text="${#numbers.formatInteger(item.totalPrice, 0, 'COMMA') + '원'}">0원</div>
+                    </div>
+                </div>
+
+                <h3 class="section-title">결제 정보</h3>
+                <div class="payment-box" th:with="itemTotal=${totalAmount},
+                                                  shippingFee=${totalAmount >= 50000 ? 0 : 3000},
+                                                  finalAmount=${totalAmount >= 50000 ? totalAmount : totalAmount + 3000}">
+                    <div class="price-row">
+                        <span>총 상품금액</span>
+                        <span th:text="${#numbers.formatInteger(itemTotal, 0, 'COMMA') + '원'}">0원</span>
+                    </div>
+                    <div class="price-row">
+                        <span>배송비</span>
+                        <span>
+                            <span th:if="${shippingFee == 0}" style="color:#007bff;">무료</span>
+                            <span th:unless="${shippingFee == 0}" th:text="${#numbers.formatInteger(shippingFee, 0, 'COMMA') + '원'}">3,000원</span>
+                        </span>
+                    </div>
+
+                    <div class="price-row total">
+                        <span class="pay-label">최종 결제 금액</span>
+                        <div>
+                            <span class="pay-amount" id="displayFinalAmount" th:text="${#numbers.formatInteger(finalAmount, 0, 'COMMA')}">0</span>
+                            <span class="unit">원</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right; color:#888; font-size:0.85rem; margin-top:10px;">
+                        * 5만원 이상 구매 시 배송비 무료
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <a th:href="@{/cart/cartList}" class="btn-back">장바구니</a>
+                    <button type="button" class="btn-pay" onclick="requestPay()">결제하기</button>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" id="csrfToken" th:value="${_csrf.token}">
+        <th:block th:if="${orderList.size() == 1 and (orderList[0].cartItemId == null or orderList[0].cartItemId == 0)}">
+            <input type="hidden" id="directProductId" th:value="${orderList[0].productId}">
+            <input type="hidden" id="directCount" th:value="${orderList[0].count}">
+        </th:block>
+    </div>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const contextPath = /*[[@{/}]]*/ "/";
+    /*]]>*/
+
+    const impCode = [[${iamportCode}]];
+    if(impCode) {
+        IMP.init(impCode);
+    } else {
+        IMP.init("imp50352711");
+    }
+
+    const itemTotalAmount = [[${totalAmount}]];
+    let shippingFee = 3000;
+    if (itemTotalAmount >= 50000) {
+        shippingFee = 0;
+    }
+    const finalTotalAmount = itemTotalAmount + shippingFee;
+
+    const orderName = [[${orderList[0].name}]] + ([[${orderList.size()}]] > 1 ? " 외 " + ([[${orderList.size()}]] - 1) + "건" : "");
+    const buyerEmail = [[${member.email}]];
+
+    const cartItemIds = [];
+    document.querySelectorAll('input[name="orderItemIds"]').forEach(input => {
+        const val = parseInt(input.value);
+        if(val > 0) cartItemIds.push(val);
+    });
+
+    function handleRequestChange() {
+        const select = document.getElementById("requestSelect");
+        const input = document.getElementById("requestInput");
+
+        if (select.value === "direct") {
+            input.style.display = "block";
+            input.focus();
+        } else {
+            input.style.display = "none";
+            input.value = "";
+        }
+    }
+
+    function requestPay() {
+        const receiverName = document.getElementById("receiverName").value;
+        const receiverPhone = document.getElementById("receiverPhone").value;
+        const address1 = document.getElementById("address1").value;
+        const address2 = document.getElementById("address2").value;
+        const zipcode = document.getElementById("zipcode").value;
+
+        if(!receiverName || !receiverPhone || !address1) {
+            alert("배송지 정보를 모두 입력해주세요.");
+            return;
+        }
+
+        let deliveryReq = document.getElementById("requestSelect").value;
+        if (deliveryReq === "direct") {
+            deliveryReq = document.getElementById("requestInput").value;
+        }
+
+        const fullAddress = address1 + " " + address2;
+
+        IMP.request_pay({
+            pg: "html5_inicis",
+            pay_method: "card",
+            merchant_uid: "ORD_" + new Date().getTime(),
+            name: orderName,
+            amount: finalTotalAmount,
+            buyer_email: buyerEmail,
+            buyer_name: receiverName,
+            buyer_tel: receiverPhone,
+            buyer_addr: fullAddress,
+            buyer_postcode: zipcode
+        }, function (rsp) {
+            if (rsp.success) {
+
+                let paymentData = {
+                    impUid: rsp.imp_uid,
+                    merchantUid: rsp.merchant_uid,
+                    paidAmount: rsp.paid_amount,
+                    receiverName: receiverName,
+                    receiverPhone: receiverPhone,
+                    address: fullAddress,
+                    deliveryRequest: deliveryReq,
+                    cartItemIds: cartItemIds
+                };
+
+                const directProductIdInput = document.getElementById("directProductId");
+
+                if (directProductIdInput) {
+                    paymentData.productId = directProductIdInput.value;
+                    paymentData.count = document.getElementById("directCount").value;
+                    paymentData.cartItemIds = null;
+                }
+
+                $.ajax({
+                    url: contextPath + "order/payment/complete",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(paymentData),
+                    beforeSend: function(xhr) {
+                        const token = document.getElementById("csrfToken").value;
+                        xhr.setRequestHeader("X-CSRF-TOKEN", token);
+                    }
+                }).done(function (data) {
+                    alert("주문이 완료되었습니다.");
+                    location.href = contextPath + "order/history";
+                }).fail(function(xhr) {
+                    alert("결제는 성공했으나 서버 저장에 실패했습니다.\n" + xhr.responseText);
+                });
+            } else {
+                alert("결제 실패: " + rsp.error_msg);
+            }
+        });
+    }
+
+    function execDaumPostcode() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                var addr = '';
+                if (data.userSelectedType === 'R') {
+                    addr = data.roadAddress;
+                } else {
+                    addr = data.jibunAddress;
+                }
+                document.getElementById('zipcode').value = data.zonecode;
+                document.getElementById('address1').value = addr;
+                document.getElementById('address2').focus();
+            }
+        }).open();
+    }
+</script>
+</body>
+</html>

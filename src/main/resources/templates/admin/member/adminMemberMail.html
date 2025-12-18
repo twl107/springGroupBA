@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <title>웹 메일 - 관리자</title>
+
+  <link rel="stylesheet" th:href="@{/css/admin/member.css}">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+
+  <style>
+    /* 검색 영역 폼 */
+    .search-form {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      max-width: 600px; /* 너무 작지 않게 조정 */
+    }
+
+    /* 셀렉트 박스 */
+    .search-select-sm {
+      width: 110px;
+      min-width: 110px;
+    }
+
+    /* 검색 input */
+    .search-form .form-control-sm {
+      width: 240px;
+    }
+
+    /* 공통 사이즈 안정화 */
+    .search-form .form-select-sm,
+    .search-form .form-control-sm,
+    .search-form .btn-sm {
+      height: 34px;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    /* 검색 버튼 넓게 */
+    .btn-search-wide {
+      padding: 0 18px;
+      white-space: nowrap;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    // 컨텍스트 경로
+    const ctx = /*[[@{/}]]*/ '/springGroupBA/';
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+      const csrfMeta = document.querySelector('meta[name="_csrf"]');
+      const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+      const csrfToken = csrfMeta ? csrfMeta.content : '';
+      const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.content : '';
+
+      const msgDetailModal = document.getElementById('msgDetailModal');
+      let currentMsgId = null;
+
+      /* =========================
+         메시지 상세 모달 열기
+      ========================= */
+      if (msgDetailModal) {
+        msgDetailModal.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget;
+          if (!button) return;
+
+          currentMsgId = button.getAttribute('data-id');
+          if (!currentMsgId) return;
+
+          fetch(ctx + 'admin/members/mail/detail/' + currentMsgId)
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('detailSender').textContent = data.sendId ?? '';
+              document.getElementById('detailReceiver').textContent = data.receiveId ?? '';
+              document.getElementById('detailTitle').textContent = data.title ?? '';
+              document.getElementById('detailContent').textContent = data.content ?? '';
+              document.getElementById('detailSendDate').textContent = data.sendDateStr ?? '';
+              document.getElementById('detailReceiveDate').textContent = data.receiveDateStr ?? '';
+              document.getElementById('detailReadDate').textContent = data.readDateStr ?? '-';
+              document.getElementById('detailStatus').textContent = data.status ?? '';
+            })
+            .catch(err => console.error('상세 정보 불러오기 실패:', err));
+        });
+      }
+
+      /* =========================
+         삭제 버튼 클릭
+      ========================= */
+      const deleteBtn = document.getElementById('btnDeleteMessage');
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', function () {
+          if (!currentMsgId) return;
+          if (!confirm('메시지를 삭제 하시겠습니까?')) return;
+
+          fetch(ctx + 'admin/members/mail/delete/' + currentMsgId, {
+            method: 'POST',
+            headers: {
+              [csrfHeader]: csrfToken
+            }
+          })
+          .then(resp => resp.text())
+          .then(msg => {
+            alert(msg);
+
+            const row = document.querySelector(`tr[data-id='${currentMsgId}']`);
+              if (row) {
+                const statusCell = row.querySelector('td:nth-child(8)'); // 상태 컬럼
+                if (statusCell) {
+                  statusCell.innerHTML = `<span class="badge bg-danger">삭제</span>`;
+                }
+              }
+
+              const modal = bootstrap.Modal.getInstance(msgDetailModal);
+              if (modal) modal.hide();
+          })
+          .catch(err => alert('삭제 실패: ' + err));
+        });
+      }
+    });
+  </script>
+
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+
+<body>
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+<div th:replace="~{include/message :: alertMessage}"></div>
+
+<div class="container mt-4">
+
+  <!-- 상단 제목 -->
+  <div class="mb-4">
+    <h3 class="fw-bold mb-1">메시지 관리</h3>
+    <small class="text-secondary">회원 메시지를 관리하고 검색할 수 있습니다.</small>
+  </div>
+
+  <!-- 버튼 그룹 -->
+  <div class="d-flex mb-3 admin-menu">
+    <a th:href="@{/admin/members/list}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'list'} ? ' active'">회원 목록</a>
+    <a th:href="@{/admin/members/grade}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'grade'} ? ' active'">등급 관리</a>
+    <a th:href="@{/admin/members/memberDel}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'memberDel'} ? ' active'">탈퇴 회원</a>
+    <a th:href="@{/admin/members/mail}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'webMessageList'} ? ' active'">
+      메일/SMS 발송
+    </a>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-auto">
+      <form th:action="@{/admin/members/mail}" method="get" class="search-form">
+        <select class="form-select form-select-sm search-select-sm" name="search">
+          <option value="senderName"
+                  th:selected="${pageVO.search == 'senderName'}">
+            보낸이
+          </option>
+
+          <option value="receiverName"
+                  th:selected="${pageVO.search == 'receiverName'}">
+            받는이
+          </option>
+
+          <option value="title"
+                  th:selected="${pageVO.search == 'title'}">
+            제목
+          </option>
+        </select>
+
+        <input type="text"
+               class="form-control form-control-sm"
+               name="keyword"
+               th:value="${pageVO.searchString}"
+               placeholder="검색어">
+
+        <button type="submit"
+                class="btn btn-sm btn-primary btn-search-wide">
+          검색
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="table-responsive mb-4">
+    <table class="table table-hover table-striped table-bordered align-middle text-center">
+      <thead class="table-light">
+      <tr>
+        <th>NO</th>
+        <th>보낸이</th>
+        <th>받는이</th>
+        <th>제목</th>
+        <th>보낸시간</th>
+        <th>받은시간</th>
+        <th>읽은시간</th>
+        <th>상태</th>
+        <th>관리</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr th:each="msg, st : ${pageVO.webMessageList}"
+          th:attr="data-id=${msg.id}">
+
+        <td th:text="${pageVO.totRecCnt - ((pageVO.pag - 1) * pageVO.pageSize + st.index)}"></td>
+
+        <td th:text="${msg.sendId}"></td>
+        <td th:text="${msg.receiveId}"></td>
+        <td th:text="${msg.title}"></td>
+
+        <td th:text="${#temporals.format(msg.sendDate, 'yyyy-MM-dd HH:mm')}"></td>
+        <td th:text="${#temporals.format(msg.receiveDate, 'yyyy-MM-dd HH:mm')}"></td>
+
+        <td th:text="${msg.readDate != null ? #temporals.format(msg.readDate, 'yyyy-MM-dd HH:mm') : '-'}"></td>
+        <td>
+          <span th:if="${msg.status == '읽지않음'}" class="badge bg-success" th:text="${msg.status}"></span>
+          <span th:if="${msg.status == '읽음'}" class="badge bg-primary" th:text="${msg.status}"></span>
+          <span th:if="${msg.status == '휴지통'}" class="badge bg-secondary" th:text="${msg.status}"></span>
+          <span th:if="${msg.status == '삭제'}" class="badge bg-danger" th:text="${msg.status}"></span>
+        </td>
+
+        <td>
+          <a href="#" class="btn btn-sm btn-outline-primary"
+             th:attr="data-id=${msg.id}"
+             data-bs-toggle="modal"
+             data-bs-target="#msgDetailModal">
+            보기
+          </a>
+        </td>
+      </tr>
+
+      <tr th:if="${#lists.isEmpty(pageVO.webMessageList)}">
+        <td colspan="9" class="text-muted">메시지가 없습니다.</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 페이지네이션 -->
+  <th:block th:replace="~{include/pagination :: pagination('/admin/members/mail', ${pageVO})}"></th:block>
+</div>
+
+<!-- 메시지 상세 모달 -->
+<div class="modal fade" id="msgDetailModal" tabindex="-1" aria-labelledby="msgDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="msgDetailModalLabel">메시지 상세</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>보낸이:</strong> <span id="detailSender"></span></p>
+        <p><strong>받는이:</strong> <span id="detailReceiver"></span></p>
+        <p><strong>제목:</strong> <span id="detailTitle"></span></p>
+        <p><strong>내용:</strong></p>
+        <p id="detailContent" style="white-space: pre-wrap;"></p>
+        <p><strong>보낸시간:</strong> <span id="detailSendDate"></span></p>
+        <p><strong>받은시간:</strong> <span id="detailReceiveDate"></span></p>
+        <p><strong>읽은시간:</strong> <span id="detailReadDate"></span></p>
+        <p><strong>상태:</strong> <span id="detailStatus"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+        <button type="button" class="btn btn-danger" id="btnDeleteMessage">삭제</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

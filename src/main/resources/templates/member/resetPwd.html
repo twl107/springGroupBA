@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>비밀번호 변경</title>
+
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .card-reset {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+    .btn-reset {
+      background-color: #198754;
+      color: #fff;
+      font-weight: 500;
+      width: 100%;
+    }
+    .btn-reset:hover {
+      background-color: #157347;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    var ctx = /*[[@{/}]]*/ '/';
+
+    $(document).ready(function() {
+       const token = $("meta[name='_csrf']").attr("content");
+       const header = $("meta[name='_csrf_header']").attr("content");
+
+       console.log("CSRF token:", token, "header:", header);
+
+       $("#resetBtn").click(function() {
+           const newPwd = $("#newPwd").val().trim();
+           const confirmPwd = $("#confirmPwd").val().trim();
+           const resetToken = $("input[name='token']").val();
+
+           if(newPwd === "" || confirmPwd === "") {
+               alert("비밀번호를 모두 입력해주세요.");
+               return;
+           }
+           if(newPwd !== confirmPwd) {
+               alert("비밀번호가 일치하지 않습니다.");
+               return;
+           }
+           if(newPwd.length < 4 || newPwd.length > 20) {
+             alert("비밀번호는 4~20자리로 입력하세요.");
+             return;
+           }
+
+           $.ajax({
+               url: `${ctx}member/resetPwd`,
+               type: "POST",
+               data: { token: resetToken, newPwd: newPwd },
+               beforeSend: function(xhr) {
+                   if(token && header) {
+                       xhr.setRequestHeader(header, token);
+                   }
+               },
+               success: function(res) {
+                   alert(res);
+                   $("#newPwd").val('');
+                   $("#confirmPwd").val('');
+                   location.href = `${ctx}member/memberLogin`;
+               },
+               error: function(err) {
+                   alert("비밀번호 변경 중 오류가 발생했습니다.");
+               }
+           });
+       });
+    });
+  </script>
+
+  <meta th:name="_csrf" th:content="${_csrf.token}" />
+  <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+<body>
+<div th:replace="~{include/header :: header}"></div>
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+  <div class="card-reset col-md-4 col-12">
+    <h3 class="text-center mb-4">비밀번호 재설정</h3>
+
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <form id="resetPwdForm">
+      <input type="hidden" name="token" th:value="${token}" />
+
+      <div class="mb-3">
+        <label for="newPwd" class="form-label">새 비밀번호</label>
+        <input type="password" name="newPwd" id="newPwd" class="form-control" required />
+      </div>
+
+      <div class="mb-3">
+        <label for="confirmPwd" class="form-label">비밀번호 확인</label>
+        <input type="password" name="confirmPwd" id="confirmPwd" class="form-control" required />
+      </div>
+
+      <button type="button" id="resetBtn" class="btn btn-reset mb-2">비밀번호 변경</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

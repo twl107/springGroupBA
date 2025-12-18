@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트</title>
+
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/solution.css}">
+</head>
+<body>
+<div th:replace="~{include/header :: header}"></div>
+<main class="main-content">
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/main/img_visual03.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>SOLUTION</h2>
+            <p>비즈니스 강자가 되게 하는 파트너<br/>
+                ㈜그린소프트의 주요 솔루션을 소개합니다.</p>
+        </div>
+    </section>
+
+    <div class="sub-content-container">
+
+        <section class="solution-item-section" id="bizmonitor">
+            <h3 class="page-title">BizMonitor-ET</h3>
+            <p class="page-intro">
+                모니터는 제조공정 및 사무실 환경을 실시간 모니터링 하기 위한 통합 솔루션으로써,<br/>
+                공기질 측정 센서를 이용하여 극초미세먼지(PM 1.0), 초미세먼지(PM 2.5),<br/>
+                미세먼지(PM 10), 온도, 습도, CO2, VOC등을 측정하고, 6개의 장비 온도 센서(-20℃～300℃)를<br/>
+                장착하고 있으며, 실시간 모니터링 및 빅데이터 제공이 가능합니다.
+            </p>
+
+            <div class="solution-intro-features">
+                <div class="intro-feature-item">
+                    <img th:src="@{/images/content/icon_mate01.svg}" alt="데이터 수집/분석">
+                    <h5>데이터 수집/분석</h5>
+                    <p>센서 및 IoT 장치를 통한 다양한 데이터 수집 및 분석</p>
+                </div>
+                <div class="intro-feature-item">
+                    <img th:src="@{/images/content/icon_mate02.svg}" alt="실시간 모니터링">
+                    <h5>실시간 모니터링</h5>
+                    <p>제조 공정 및 사무실 환경의 실시간 모니터링</p>
+                </div>
+                <div class="intro-feature-item">
+                    <img th:src="@{/images/content/icon_mate03.svg}" alt="환경 모니터링">
+                    <h5>환경 모니터링</h5>
+                    <p>미세먼지 및 실내 공기질 측정에 적합한<br/>정밀센서와 모니터링 시스템 연구 및 개발</p>
+                </div>
+            </div>
+
+            <h4 class="sub-section-title">실시간 모니터링 (테이블)</h4>
+            <p class="text-center" style="font-size: 1.2rem; font-weight: 500; margin-bottom: 20px;">Monitoring System</p>
+            <div class="monitoring-table-container">
+                <table class="spec-table">
+                    <thead>
+                    <tr>
+                        <th>측정항목</th>
+                        <th>측정값</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>이산화탄소(Co2)</td>
+                        <td>352</td>
+                    </tr>
+                    <tr>
+                        <td>유해물질(VOC)</td>
+                        <td>533</td>
+                    </tr>
+                    <tr>
+                        <td>실내습도</td>
+                        <td>38</td>
+                    </tr>
+                    <tr>
+                        <td>실내온도</td>
+                        <td>24</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <table class="spec-table">
+                    <thead>
+                    <tr>
+                        <th>미세먼지</th>
+                        <th>측정값</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>PM 1.0</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>PM 2.5</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>PM 10</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td style="visibility: hidden;">&nbsp;</td>
+                        <td style="visibility: hidden;">&nbsp;</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <table class="spec-table">
+                    <thead>
+                    <tr>
+                        <th>장치 #</th>
+                        <th>측정값</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>장치 1</td>
+                        <td>38</td>
+                    </tr>
+                    <tr>
+                        <td>장치 2</td>
+                        <td>38</td>
+                    </tr>
+                    <tr>
+                        <td>장치 3</td>
+                        <td>20</td>
+                    </tr>
+                    <tr>
+                        <td>장치 4</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>장치 5</td>
+                        <td>-15</td>
+                    </tr>
+                    <tr>
+                        <td>장치 6</td>
+                        <td>25</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="text-align: left; margin-top: -10px; font-size: 0.9rem;">※ 최종측정 23:51:47현재</p>
+
+            <h4 class="sub-section-title">실시간 모니터링 (그래프)</h4>
+            <div class="data-graph-grid">
+                <img th:src="@{/images/content/monitoringgraph.jpg}" alt="이산화탄소 그래프">
+            </div>
+
+            <h4 class="sub-section-title">BizMonitor-VC</h4>
+            <p class="text-center font-medium" style="margin-bottom: 15px;">주요설비의 진동·전류 모니터링</p>
+            <p>
+                공장 운영에 가장 큰 잠재요소는 다운타임(기계나 시스템의 고장으로 운용할 수 없는 시간)이며, 잠시라도 공장이 멈추게 되면 막대한 손실로 이어집니다.
+                정전이나 지진과 같은 재해는 사람이 막기 어렵지만 장비고장은 사람이 미리 대응할 수 있는 사안입니다.
+                산업용 장비의 문제점은 진동, 온도, 전류 모니터링을 통하여 상당 부분 사전에 예측할 수 있으므로 이에 대한 모니터링 및 알람시스템을 개발하였습니다.
+            </p>
+            <div class="graph-item" style="width: 60%; margin-top: 20px; margin-left: auto; margin-right: auto;">
+                <img th:src="@{/images/content/img_vibration.jpg}" alt="Vibration 그래프">
+                <p class="text-center">Vibration</p>
+            </div>
+
+            <h4 class="sub-section-title">환경 모니터링 대상 및 범위</h4>
+            <div class="monitoring-spec-container">
+                <table class="spec-table">
+                    <tbody>
+                    <tr>
+                        <td>온도 범위</td>
+                        <td>-20 ~ 80°C(±0.5°C)</td>
+                    </tr>
+                    <tr>
+                        <td>습도 범위</td>
+                        <td>0 ~ 99% RH(±3% RH)</td>
+                    </tr>
+                    <tr>
+                        <td>Co2 범위</td>
+                        <td>0 ~ 5,000ppm(±50ppm + 5%)</td>
+                    </tr>
+                    <tr>
+                        <td>Voc 범위</td>
+                        <td>0 ~ 3 level</td>
+                    </tr>
+                    <tr>
+                        <td>PM 1.0 / PM 2.5 범위</td>
+                        <td>0~1000(±10ug/m³ at 0~100ug/m³ ±10% at 101~1,000ug/m³)</td>
+                    </tr>
+                    <tr>
+                        <td>PM 10 범위</td>
+                        <td>0~1000(±25ug/m³ at 0~100ug/m³ ±25% at 101~1,000ug/m³)</td>
+                    </tr>
+                    <tr>
+                        <td>입력 전원</td>
+                        <td>24VDC/VAC(18 ~ 36VDC)</td>
+                    </tr>
+                    <tr style="visibility: hidden;">
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr style="visibility: hidden;">
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <table class="spec-table">
+                    <tbody>
+                    <tr>
+                        <td>소비 전류</td>
+                        <td>0.15A at 24VDC</td>
+                    </tr>
+                    <tr>
+                        <td>출력 포트</td>
+                        <td>1 Port(릴레이, 5A 250Vac/30VDC)</td>
+                    </tr>
+                    <tr>
+                        <td>아날로그 출력 포트</td>
+                        <td>4 Port(0 ~ 10VDC)</td>
+                    </tr>
+                    <tr>
+                        <td>통신 포트</td>
+                        <td>1 Port(RS-485)</td>
+                    </tr>
+                    <tr>
+                        <td>동작 온도</td>
+                        <td>-10 ~ 50°C</td>
+                    </tr>
+                    <tr>
+                        <td>동작 습도</td>
+                        <td>0 ~ 80%(무결로)</td>
+                    </tr>
+                    <tr>
+                        <td>보관 온도</td>
+                        <td>-20 ~ 60°C</td>
+                    </tr>
+                    <tr>
+                        <td>제품 규격</td>
+                        <td>710g / (137.0x173.9x76.0)(mm WDH)</td>
+                    </tr>
+                    <tr>
+                        <td>가이드 규격</td>
+                        <td>10g E4(4EA)</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

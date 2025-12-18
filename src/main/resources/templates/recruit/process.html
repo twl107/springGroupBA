@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Recruit - Hiring Process</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/recruit.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+
+  <section class="sub-visual"
+           th:style="'background-image: url(' + @{/images/recruit/recruit_visual.jpg} + ');'">
+    <div class="sub-visual-content">
+      <h2>Hiring Process</h2>
+      <p>그린소프트의 공정하고 체계적인 채용 절차입니다.</p>
+    </div>
+  </section>
+
+  <section class="recruit-section">
+    <h3 class="section-title">채용 프로세스</h3>
+    <p class="section-intro">
+      누구에게나 동일하게 적용되는 그린소프트의 공정한 채용 절차입니다.
+    </p>
+
+    <div class="process-grid">
+      <div class="process-item">
+        <img th:src="@{/images/recruit/process_01.jpg}">
+        <h4>1. 서류전형</h4>
+        <p>지원자의 경험과 역량을 기반으로 서류 검토를 진행합니다.</p>
+      </div>
+
+      <div class="process-item">
+        <img th:src="@{/images/recruit/process_02.jpg}">
+        <h4>2. 기술면접</h4>
+        <p>실무 중심의 기술 및 문제 해결 능력을 검증합니다.</p>
+      </div>
+
+      <div class="process-item">
+        <img th:src="@{/images/recruit/process_03.jpg}">
+        <h4>3. 임원면접</h4>
+        <p>조직 문화 적합도 및 성장 가능성을 평가합니다.</p>
+      </div>
+
+      <div class="process-item">
+        <img th:src="@{/images/recruit/process_04.jpg}">
+        <h4>4. 최종합격</h4>
+        <p>최종 결과 안내 및 온보딩 절차를 진행합니다.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

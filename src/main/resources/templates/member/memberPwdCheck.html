@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>비밀번호 확인</title>
+
+  <!-- Bootstrap + jQuery -->
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <!-- CSRF 토큰 -->
+  <meta th:name="_csrf" th:content="${_csrf.token}" />
+  <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
+
+  <style>
+    body {
+        background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .card {
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        padding: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background-color: #f8f9fa;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+    .card-title {
+        font-weight: 700;
+        color: #1f3a93;
+    }
+    .card p {
+        color: #555;
+    }
+    .btn-success {
+        background-color: #1fbc9c;
+        border-color: #17a589;
+        transition: background-color 0.2s;
+    }
+    .btn-success:hover {
+      background-color: #17a589;
+    }
+    .btn-warning {
+        background-color: #f5b041;
+        border-color: #d68910;
+        color: #fff;
+    }
+    .btn-warning:hover {
+      background-color: #d68910;
+    }
+    .btn-info {
+        background-color: #5dade2;
+        border-color: #3498db;
+        color: #fff;
+    }
+    .btn-info:hover {
+      background-color: #3498db;
+    }
+    .form-control {
+        border-radius: 0.5rem;
+        border: 1px solid #ced4da;
+        padding: 0.5rem 0.75rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus {
+        border-color: #1fbc9c;
+        box-shadow: 0 0 0 0.2rem rgba(31,188,156,0.25);
+    }
+    .container {
+      padding-top: 5vh;
+      padding-bottom: 5vh;
+      margin: auto;
+    }
+    .form-label i {
+      margin-right: 0.3rem;
+      color: #1f3a93;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    'use strict';
+    let flag = /*[[${flag}]]*/ 'p';
+    let mid  = /*[[${mid}]]*/ 0;
+    let ctx = /*[[@{/}]]*/ '';
+
+    // 엔터감지
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = $("meta[name='_csrf']").attr("content");
+      const header = $("meta[name='_csrf_header']").attr("content");
+
+      // AJAX 요청 전 CSRF 헤더 설정
+      $(document).ajaxSend(function(e, xhr, options) {
+          xhr.setRequestHeader(header, token);
+      });
+
+      // myform: Enter 키
+      $("#pwd").on("keydown", function(e) {
+          if(e.key === "Enter") { // Enter 감지
+              e.preventDefault();
+              pwdCheck();
+          }
+      });
+
+      // newPassform: Enter 키
+      $("#newPwd, #rePwd").on("keydown", function(e) {
+          if(e.key === "Enter") {
+              e.preventDefault();
+              pwdChange();
+          }
+      });
+      $("#newPassform input[type='button']").not("#backBtn").on("click", pwdChange);
+    });
+
+    function pwdCheck() {
+        let pwd = $("#pwd").val().trim();
+        if(pwd === "") {
+            alert("현재 비밀번호를 입력하세요");
+            $("#pwd").focus();
+            return false;
+        }
+
+        $.ajax({
+            url: `${ctx}member/memberPwdCheck`,
+            type: 'post',
+            data: { pwd: pwd, flag: flag },
+            success: (res) => {
+                if(res != '0') {
+                    if(flag === 'p') {
+                        $("#myform").hide();
+                        $("#newPassform").show();
+                    } else {
+                        location.href = ctx+'member/memberUpdate?mid=' + mid;
+                    }
+                } else {
+                    alert("현재 비밀번호가 틀렸습니다.");
+                    $("#pwd").focus();
+                }
+            },
+            error: () => alert("전송오류!")
+        });
+    }
+
+    function pwdChange() {
+        if($("#newPassform").is(":hidden")) return;
+
+        let newPwd = $("#newPwd").val().trim();
+        let rePwd = $("#rePwd").val().trim();
+
+        if(newPwd === "" || rePwd === "" || newPwd !== rePwd) {
+          alert("비밀번호가 맞지 않습니다. 비밀번호를 확인하세요.");
+        }
+        else if (newPwd.length < 4 || newPwd.length > 20) {
+          alert('비밀번호는 4~20자리로 입력하세요.');
+        }
+        else {
+          $("#newPassform").attr("action", ctx+"member/memberPwdChange").submit();
+        }
+    }
+
+    $(document).ready(function() {
+        const token = $("meta[name='_csrf']").attr("content");
+        const header = $("meta[name='_csrf_header']").attr("content");
+        $(document).ajaxSend(function(e, xhr, options) {
+            xhr.setRequestHeader(header, token);
+        });
+    });
+  </script>
+</head>
+
+<body>
+<div th:replace="~{include/header :: header}"></div>
+
+<div class="container d-flex justify-content-center align-items-center">
+  <div class="card w-50">
+    <div class="card-body">
+      <h3 class="card-title text-center mb-3"><i class="bi bi-lock-fill"></i> 비밀번호 확인</h3>
+      <p class="text-center mb-4">(현재 비밀번호를 확인합니다.)</p>
+
+      <form id="myform" method="post">
+        <div class="mb-3">
+          <label for="pwd" class="form-label"><i class="bi bi-key-fill"></i>비밀번호</label>
+          <input type="password" name="pwd" id="pwd" class="form-control" autofocus required>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2">
+          <input type="button" value="비밀번호확인" onclick="pwdCheck()" class="btn btn-success">
+          <input type="reset" value="다시입력" class="btn btn-warning">
+          <input type="button" value="돌아가기" onclick="location.href = `${ctx}member/memberMain`;" class="btn btn-info">
+        </div>
+      </form>
+
+      <form id="newPassform" method="post" style="display:none;" th:action="@{/member/memberPwdChange}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <div class="mb-3 mt-4">
+          <label for="newPwd" class="form-label"><i class="bi bi-shield-lock-fill"></i>새 비밀번호</label>
+          <input type="password" name="newPwd" id="newPwd" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="rePwd" class="form-label"><i class="bi bi-shield-lock"></i>비밀번호 확인</label>
+          <input type="password" name="rePwd" id="rePwd" class="form-control" required>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2">
+          <input type="button" value="비밀번호변경" class="btn btn-success">
+          <input type="reset" value="다시입력" class="btn btn-warning">
+          <input type="button" value="돌아가기" id="backBtn" onclick="location.href = `${ctx}member/memberMain`;" class="btn btn-info">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

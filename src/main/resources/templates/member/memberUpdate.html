@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>회원 정보 수정</title>
+
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+      max-width:800px;
+      padding: 30px;
+      margin-top: 100px !important;
+    }
+    .fieldError {
+      color: #f00 !important;
+      font-size: 12px !important;
+    }
+    p {
+      text-align: left;
+    }
+    .form-box {
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      padding: 8px;
+    }
+    .form-check {
+      padding-left: 0;
+    }
+
+    /* 이미지 wrapper 위치 기준 */
+    .image-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* 삭제 버튼 기본 숨김, 이미지 호버 시 보이기 */
+    .image-wrapper .delete-btn {
+      position: absolute;
+      top: 0;
+      right: 0;
+      transform: translate(50%, -50%);
+      display: none;
+      border-radius: 50%;
+      padding: 0 6px;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    /* 호버 시 삭제 버튼 표시 */
+    .image-wrapper:hover .delete-btn {
+      display: inline-block;
+      cursor: pointer;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    'use strict';
+
+    const noImageUrl = /*[[ @{/images/noimage.jpg} ]]*/ "/images/noimage.jpg";
+    const memberEmailCheckUrl = /*[[@{/member/memberEmailCheck}]]*/ "/member/memberEmailCheck";
+    const memberEmailCheckOkUrl = /*[[@{/member/memberEmailCheckOk}]]*/ "/member/memberEmailCheckOk";
+    const memberEmailCheckNoUrl = /*[[@{/member/memberEmailCheckNo}]]*/ "/member/memberEmailCheckNo";
+
+    const EMAIL_DOMAIN_LIST = ["naver.com", "gmail.com", "daum.net"];
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    let interval;
+    let timeLimit = 120;
+
+    const regExp = {
+      name: /^[가-힣a-zA-Z]{2,10}$/,
+      emailLocal: /^[A-Za-z0-9._%+-]+$/,
+      email: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
+      tel: /^\d{2,3}-\d{3,4}-\d{4}$/,
+      imageExt: ['jpg', 'jpeg', 'png', 'gif']
+    };
+
+    $(document).ready(function () {
+      // CSRF
+      const token = $("meta[name='_csrf']").attr("content");
+      const header = $("meta[name='_csrf_header']").attr("content");
+      $(document).ajaxSend((e, xhr) => xhr.setRequestHeader(header, token));
+
+      const email1 = $("#email1");
+      const email2Hidden = $("#email2Hidden");
+      const email2Select = $("#email2Select");
+      const email2HiddenVal = email2Hidden.val().trim();
+
+      // 이메일 초기값 처리
+      if (EMAIL_DOMAIN_LIST.includes(email2HiddenVal)) {
+        email2Select.val(email2HiddenVal);
+      } else {
+        toggleEmailInput("inputEmail", email2HiddenVal);
+      }
+
+      // email1 변경 → emailHidden 자동 갱신 + 인증 초기화
+      email1.on("input", function () {
+        syncEmailHidden();
+        $("#emailVerified").val("false");
+      });
+
+      // 파일 변경 시 미리보기
+      $("#file").on("change", function () {
+        previewImage(this);
+      });
+    });
+
+    /* ===============================
+            유효성 검사
+    =============================== */
+    function validateName(nameValue) {
+      if (!regExp.name.test(nameValue)) {
+        alert("이름은 2~10자리 한글/영문만 가능합니다.");
+        return false;
+      }
+      return true;
+    }
+
+    function validateTel(telValue) {
+      if (telValue && !regExp.tel.test(telValue)) {
+        alert("전화번호 형식을 확인하세요. (000-0000-0000)");
+        return false;
+      }
+      return true;
+    }
+
+    function validateEmail(email1Value, email2Value) {
+      const typedEmail = `${email1Value.trim()}@${email2Value.trim()}`.toLowerCase();
+      if (!regExp.emailLocal.test(email1Value.trim()) || !regExp.email.test(typedEmail)) {
+        alert("이메일 형식이 올바르지 않습니다.");
+        return false;
+      }
+      return typedEmail;
+    }
+
+    function validateFile(fileInput) {
+      if (fileInput && fileInput.value) {
+        const file = fileInput.files[0];
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!regExp.imageExt.includes(ext)) {
+          alert("이미지 파일만 업로드 가능합니다.");
+          fileInput.value = "";
+          return false;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          alert("파일 용량은 10MB 이하만 가능합니다.");
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /* ===============================
+            이메일 Hidden 동기화
+    =============================== */
+    function syncEmailHidden() {
+      const email1 = $("#email1").val().trim();
+      const email2 = $("#email2Hidden").val().trim();
+      $("#emailHidden").val(email1 + "@" + email2);
+    }
+
+    /* ===============================
+            toggleEmailInput
+    =============================== */
+    function toggleEmailInput(value, initialValue) {
+      const hidden = document.getElementById("email2Hidden");
+      const wrapper = document.getElementById("email2Select").parentNode;
+      let select = document.getElementById("email2Select");
+      let input = document.getElementById("email2Input");
+
+      const hiddenVal = initialValue || value;
+
+      // 직접 입력
+      if (value === "inputEmail" || initialValue) {
+        if (!input) {
+          input = document.createElement("input");
+          input.type = "text";
+          input.id = "email2Input";
+          input.name = "email2";
+          input.className = "form-control form-control-sm flex-fill";
+          input.placeholder = "직접 입력";
+
+          wrapper.replaceChild(input, select);
+
+          input.addEventListener("input", () => {
+            hidden.value = input.value.trim();
+            $("#emailVerified").val("false");
+            syncEmailHidden();
+          });
+        }
+
+        if (value === "inputEmail" && !initialValue) {
+          input.value = "";
+          hidden.value = "";
+        } else {
+          input.value = hiddenVal;
+          hidden.value = hiddenVal;
+        }
+
+        input.focus();
+      }
+
+      // select 모드
+      else {
+        if (input) {
+          const html = `
+            <select id="email2Select" class="form-select form-select-sm flex-fill"
+              onchange="toggleEmailInput(this.value)">
+              <option value="naver.com">naver.com</option>
+              <option value="gmail.com">gmail.com</option>
+              <option value="daum.net">daum.net</option>
+              <option value="inputEmail">직접입력</option>
+            </select>`;
+          $(input).replaceWith(html);
+          select = document.getElementById("email2Select");
+        }
+
+        select.value = value;
+        hidden.value = value;
+        $("#emailVerified").val("false");
+      }
+
+      syncEmailHidden();
+    }
+
+    /* ===============================
+            fieldsPlus (submit 준비)
+    =============================== */
+    function fieldsPlus() {
+      const form = document.forms["memberForm"];
+
+      syncEmailHidden();
+
+      // 전화번호
+      const telValue = [
+        form.tel1.value.trim(),
+        form.tel2.value.trim(),
+        form.tel3.value.trim()
+      ].join("-");
+      document.getElementById("telHidden").value = telValue;
+
+      if (!validateTel(telValue)) return false;
+
+      // 이메일
+      const typedEmail = validateEmail(form.email1.value, $("#email2Hidden").val());
+      if (!typedEmail) return false;
+
+      $("#emailHidden").val(typedEmail);
+
+      return typedEmail;
+    }
+
+    /* ===============================
+            memberUpdate (제출)
+    =============================== */
+    function memberUpdate(event) {
+      event.preventDefault();
+
+      const form = document.forms["memberForm"];
+      const typedEmail = fieldsPlus();
+      if (!typedEmail) return false;
+
+      const name = form.elements["name"];
+      const emailVerified = $("#emailVerified").val() === "true";
+      const originalEmail = $("#originalEmail").val().trim().toLowerCase();
+      const fileInput = form.file;
+
+      if (!validateName(name.value)) return false;
+      if (!validateFile(fileInput)) return false;
+
+      const emailChanged = typedEmail.toLowerCase() !== originalEmail;
+      $("#emailChanged").val(emailChanged ? "1" : "0");
+
+      if (emailChanged && !emailVerified) {
+        alert("이메일이 변경되었습니다. 변경된 이메일을 인증해주세요.");
+        return false;
+      }
+
+      form.submit();
+    }
+
+    /* ===============================
+            인증 관련
+    =============================== */
+    function emailNumSend() {
+      syncEmailHidden();
+      const email = $("#emailHidden").val().trim();
+
+      if (!regExp.email.test(email)) {
+        alert("이메일 형식 오류");
+        return;
+      }
+
+      $("#emailSpin").html("<div class='text-center'><div class='spinner-border text-muted'></div> 발송중...</div>");
+
+      $.post(memberEmailCheckUrl, { email })
+        .done(res => {
+          if (res == 1) {
+            alert("인증번호가 발송되었습니다.");
+            $("#emailSpin").empty();
+            createEmailCheckForm();
+            timer();
+          } else alert("다시 시도해주세요.");
+        })
+        .fail(() => alert("전송 오류"));
+    }
+
+    function createEmailCheckForm() {
+      $("#addContent").html(`
+        <div class="input-group">
+          <input type="text" id="checkKey" class="form-control" placeholder="인증번호 입력">
+          <span id="timeLimit" class="input-group-text"></span>
+          <button type="button" class="btn btn-primary" onclick="emailNumCheckOk()">확인</button>
+          <button type="button" class="btn btn-warning" onclick="emailNumSend()">재전송</button>
+        </div>
+      `);
+    }
+
+    function emailNumCheckOk() {
+      const checkKey = $("#checkKey").val().trim();
+      if (!checkKey) return alert("인증번호 입력");
+
+      $.post(memberEmailCheckOkUrl, { checkKey })
+        .done(res => {
+          if (res == 1) {
+            $("#addContent").html(`<input type="text" class="form-control text-success" value="인증완료" readonly>`);
+            $("#emailVerified").val("true");
+            clearInterval(interval);
+          } else {
+            $("#addContent").html(`<input type="text" class="form-control text-danger" value="인증 실패" readonly>`);
+          }
+        })
+        .fail(() => alert("전송 오류"));
+    }
+
+    function timer() {
+      clearInterval(interval);
+      timeLimit = 120;
+
+      interval = setInterval(() => {
+        $("#timeLimit").text(`남은시간: ${timeLimit}초`);
+
+        if (timeLimit <= 0) {
+          clearInterval(interval);
+          $.post(memberEmailCheckNoUrl);
+          $("#timeLimit").text("시간 만료");
+        }
+
+        timeLimit--;
+      }, 1000);
+    }
+
+    /* ===============================
+            이미지
+    =============================== */
+    function previewImage(input) {
+      const preview = document.getElementById("photoPreview");
+      const del = document.getElementById("deleteImageHidden");
+      if (!input.files[0]) return;
+
+      const file = input.files[0];
+      const ext = file.name.split(".").pop().toLowerCase();
+      if (!["jpg", "jpeg", "png", "gif"].includes(ext)) {
+        alert("이미지 파일만 가능합니다.");
+        input.value = "";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => preview.src = e.target.result;
+      reader.readAsDataURL(file);
+
+      del.value = "0";
+    }
+
+    function deleteImage() {
+      document.getElementById("photoPreview").src = noImageUrl;
+      document.getElementById("file").value = "";
+      document.getElementById("deleteImageHidden").value = "1";
+    }
+
+    // 에러 초기화
+    function clearError(id) {
+      const el = document.getElementById(id);
+      if(el) el.textContent='';
+    }
+  </script>
+
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+<div th:replace="~{include/message :: alertMessage}"></div>
+
+<div class="container my-5">
+  <h2 class="text-center mb-4">회원 정보 수정</h2>
+
+  <form class="my-2" th:action="@{/member/memberUpdate}" th:object="${member}" method="post" name="memberForm" enctype="multipart/form-data">
+    <!-- 이름 -->
+    <div class="mb-3 row">
+      <label class="col-sm-3 col-form-label text-end">이름</label>
+      <div class="col-sm-9">
+        <input type="text" th:field="*{name}" class="form-control" oninput="clearError('nameError')" placeholder="2~10자리 한글/영문">
+        <div th:if="${#fields.hasErrors('name')}" id="nameError" th:errors="*{name}" class="fieldError"></div>
+      </div>
+    </div>
+
+    <!-- 아이디 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">아이디</label>
+      <div class="col-sm-6">
+        <input type="text" th:field="*{mid}" class="form-control" oninput="clearError('midError')" placeholder="4~20자리 영문/숫자/_" readonly>
+        <input type="hidden" id="idChecked" name="idChecked" th:value="${idChecked ?: 0}">
+        <div th:if="${#fields.hasErrors('mid')}" id="midError" th:errors="*{mid}" class="fieldError"></div>
+      </div>
+    </div>
+
+    <!-- 닉네임 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">닉네임</label>
+      <div class="col-sm-6">
+        <input type="text" th:field="*{nickName}" class="form-control" oninput="clearError('nickError')" placeholder="2~10자리 한글/영문/숫자/_" readonly>
+        <input type="hidden" id="nickChecked" name="nickChecked" th:value="${nickChecked ?: 0}">
+        <div th:if="${#fields.hasErrors('nickName')}" id="nickError" th:errors="*{nickName}" class="fieldError"></div>
+      </div>
+    </div>
+
+    <!-- 이메일 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">이메일</label>
+      <div class="col-sm-9 d-flex gap-2 align-items-center">
+        <!-- 이메일 계정 -->
+        <input type="text" style="height: 38px; !important" th:field="*{email1}" id="email1" class="form-control form-control-sm flex-fill" oninput="clearError('emailError')" placeholder="영문/숫자/일부 특수문자">
+
+        <span class="align-self-center"> @ </span>
+
+        <!-- 도메인 -->
+        <select id="email2Select" class="form-select form-select-sm flex-fill" style="height: 38px; !important" onchange="toggleEmailInput(this.value)">
+          <option value="naver.com">naver.com</option>
+          <option value="gmail.com">gmail.com</option>
+          <option value="daum.net">daum.net</option>
+          <option value="inputEmail">직접입력</option>
+        </select>
+
+        <input type="hidden" th:field="*{email2}" id="email2Hidden" th:value="${member.email2}">
+        <input type="hidden" name="email" id="emailHidden" th:value="${member.email}">
+        <input type="hidden" id="emailChanged" name="emailChanged" value="0">
+        <input type="hidden" id="emailVerified" name="emailVerified" th:value="${member.emailVerified}">
+        <input type="hidden" id="originalEmail" name="originalEmail" th:value="${member.email}">
+
+
+        <!-- 인증 버튼 -->
+        <button type="button" class="btn btn-primary" style="width: 130px; !important" onclick="emailNumSend()">인증</button>
+      </div>
+      <div class="offset-sm-3 col-sm-9 mt-1 fieldError" id="emailError" th:if="${#fields.hasErrors('email1')}" th:errors="*{email1}"></div>
+
+      <div class="offset-sm-3 col-sm-9 mt-1" id="emailSpin"></div>
+      <div class="offset-sm-3 col-sm-9 mt-1" id="addContent"></div>
+    </div>
+
+    <!-- 전화번호 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">전화번호</label>
+      <div class="col-sm-9 d-flex gap-2">
+        <select th:field="*{tel1}" class="form-select w-25">
+          <option value="010">010</option>
+          <option value="02">02</option>
+          <option value="031">031</option>
+        </select>
+        <input type="text" th:field="*{tel2}" class="form-control w-25" oninput="clearError('telError')" maxlength="4">
+        <input type="text" th:field="*{tel3}" class="form-control w-25" oninput="clearError('telError')" maxlength="4">
+
+        <input type="hidden" name="tel" id="telHidden">
+      </div>
+      <div class="offset-sm-3 col-sm-9 mt-1 fieldError" id="telError" th:if="${#fields.hasErrors('tel1')}" th:errors="*{tel1}"></div>
+    </div>
+
+    <!-- 주소 -->
+    <div class="mb-3 row">
+      <label class="col-sm-3 col-form-label text-end">주소</label>
+      <div class="col-sm-9">
+        <div class="input-group mb-2">
+          <input type="text" id="postcode" th:field="*{postcode}" class="form-control" placeholder="우편번호" readonly>
+          <button type="button" class="btn btn-primary" onclick="execDaumPostcode()">주소 검색</button>
+        </div>
+
+        <input type="text" id="roadAddress" th:field="*{roadAddress}" class="form-control mb-2" placeholder="기본 주소" readonly>
+        <input type="text" id="detailAddress" th:field="*{detailAddress}" class="form-control" placeholder="상세주소 입력">
+
+        <!-- 전체 주소 필드 -->
+        <input type="hidden" name="address" id="addressHidden">
+      </div>
+    </div>
+
+    <!-- 성별 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">성별</label>
+      <div class="col-sm-9">
+        <div class="d-flex border p-2 rounded">
+          <div class="form-check form-check-inline">
+            <input id="genderMale" th:field="*{gender}" type="radio" value="남자">
+            <label for="genderMale" class="form-check-label">남자</label>
+          </div>
+
+          <div class="form-check form-check-inline">
+            <input id="genderFemale" th:field="*{gender}" type="radio" value="여자">
+            <label for="genderFemale" class="form-check-label">여자</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 생일 -->
+    <div class="mb-3 row align-items-center">
+      <label class="col-sm-3 col-form-label text-end">생일</label>
+      <div class="col-sm-9">
+        <input th:field="*{birthday}" type="date" class="form-control">
+      </div>
+    </div>
+
+    <!-- 자기소개 -->
+    <div class="mb-3 row align-items-start">
+      <label class="col-sm-3 col-form-label text-end">자기소개</label>
+      <div class="col-sm-9">
+        <textarea th:field="*{content}" rows="4" class="form-control"></textarea>
+      </div>
+    </div>
+
+    <!-- 프로필 사진 -->
+    <div class="mb-3 row align-items-start">
+      <label class="col-sm-3 col-form-label text-end fw-bold">이미지 등록</label>
+      <div class="col-sm-9 d-flex flex-column align-items-start">
+        <div class="position-relative d-inline-block image-wrapper">
+          <!-- 기존 이미지 -->
+          <img id="photoPreview"
+               th:src="${#strings.isEmpty(member.photoName) or member.photoName == 'noimage.jpg'}
+             ? @{/images/noimage.jpg}
+             : @{/upload/member/{f}(f=${member.photoName})}"
+               class="rounded-circle border shadow-sm"
+               width="120" height="120" alt="프로필 이미지">
+
+          <!-- 삭제 버튼 (호버 시 표시) -->
+          <button type="button"
+                  class="btn btn-sm btn-danger delete-btn"
+                  onclick="deleteImage()">×</button>
+        </div>
+
+        <!-- 파일 선택 -->
+        <input type="file" id="file" class="form-control mt-2 w-auto"
+               onchange="previewImage(this)" th:field="*{file}" />
+
+        <!-- 삭제 hidden -->
+        <input type="hidden" id="deleteImageHidden" name="deleteImageHidden" value="0"/>
+      </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <button class="btn btn-primary me-3" type="button" onclick="memberUpdate(event)">수정하기</button>
+      <a th:href="@{/member/memberMain}" class="btn btn-secondary">돌아가기</a>
+    </div>
+
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+  </form>
+</div>
+
+<div th:replace="~{include/footer :: footer}"></div>
+</body>
+</html>

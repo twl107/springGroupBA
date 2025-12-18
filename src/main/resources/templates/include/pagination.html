@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="pagination(baseUrl, pageVO)">
+    <div class="text-center" th:if="${pageVO.totRecCnt > 0}">
+        <ul class="pagination justify-content-center pagination-sm">
+            <li class="page-item" th:if="${pageVO.pag > 1}">
+                <a class="page-link"
+                   th:href="@{${baseUrl}(page=1, search=${pageVO.search}, keyword=${pageVO.searchString})}">
+                    첫페이지
+                </a>
+            </li>
+
+            <li class="page-item" th:if="${pageVO.curBlock > 0}">
+                <a class="page-link"
+                   th:href="@{${baseUrl}(
+             page=${pageVO.startPageNo - pageVO.blockSize},
+             search=${pageVO.search},
+             keyword=${pageVO.searchString}
+           )}">
+                    이전블록
+                </a>
+            </li>
+
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(pageVO.startPageNo, pageVO.endPageNo)}"
+                th:classappend="${i == pageVO.pag} ? 'active'">
+                <a class="page-link"
+                   th:href="@{${baseUrl}(page=${i}, search=${pageVO.search}, keyword=${pageVO.searchString})}"
+                   th:text="${i}">
+                </a>
+            </li>
+
+            <li class="page-item" th:if="${pageVO.curBlock < pageVO.lastBlock}">
+                <a class="page-link"
+                   th:href="@{${baseUrl}(
+             page=${pageVO.startPageNo + pageVO.blockSize},
+             search=${pageVO.search},
+             keyword=${pageVO.searchString}
+           )}">
+                    다음블록
+                </a>
+            </li>
+
+            <li class="page-item" th:if="${pageVO.pag < pageVO.totPage}">
+                <a class="page-link"
+                   th:href="@{${baseUrl}(page=${pageVO.totPage}, search=${pageVO.search}, keyword=${pageVO.searchString})}">
+                    마지막페이지
+                </a>
+            </li>
+        </ul>
+    </div>
+</th:block>
+</body>
+</html>

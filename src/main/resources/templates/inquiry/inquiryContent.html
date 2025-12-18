@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>그린소프트 - 문의 상세</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/inquiry.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+<main class="main-content">
+    <section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+        <div class="sub-visual-content">
+            <h2>1:1 문의 상세</h2>
+        </div>
+    </section>
+    <div class="sub-content-container">
+        <div class="pds-form-container">
+            <div class="view-header">
+                <h3 class="view-title">
+                    <span class="badge"
+                          th:classappend="${dto.status.name() == 'COMPLETE'} ? 'bg-success' : 'bg-secondary'"
+                          th:text="${dto.status.description}"></span>
+                    [[${dto.title}]]
+                </h3>
+                <div class="view-meta">
+                    <span>👤 [[${dto.writerName}]]</span>
+                    <span>📅 [[${#temporals.format(dto.regDate, 'yyyy-MM-dd HH:mm')}]]</span>
+                </div>
+            </div>
+            <div class="view-content" th:text="${dto.content}"></div>
+            <div class="view-files" th:if="${dto.saveFileName != null}">
+                <h4 style="font-size: 1rem; margin-bottom: 10px; color: #555;">📎 첨부 이미지</h4>
+                <img th:src="@{'/upload/inquiry/' + ${dto.saveFileName}}"
+                     alt="첨부 이미지"
+                     style="max-width: 100%; border-radius: 5px;">
+            </div>
+            <div class="admin-answer-box" th:if="${dto.answer != null}">
+                <div class="admin-answer-header">
+                    <div class="admin-answer-title">👨‍💼 관리자 답변</div>
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <button type="button" class="btn-mini" onclick="toggleEditForm()">수정</button>
+                        <form th:action="@{/inquiry/deleteAnswer}" method="post" style="display:inline;" onsubmit="return confirm('정말 답변을 삭제하시겠습니까?');">
+                            <input type="hidden" name="id" th:value="${dto.id}">
+                            <button type="submit" class="btn-mini danger">삭제</button>
+                        </form>
+                    </div>
+                </div>
+                <div id="originalAnswer" class="admin-answer-content" th:text="${dto.answer}"></div>
+                <div id="editAnswerForm" style="display: none;">
+                    <form th:action="@{/inquiry/modifyAnswer}" method="post">
+                        <input type="hidden" name="id" th:value="${dto.id}">
+                        <textarea name="answerContent" class="form-control" rows="5"
+                                  style="margin-bottom: 10px; background: #fff;"
+                                  th:text="${dto.answer}" required></textarea>
+                        <div style="text-align: right;">
+                            <button type="button" class="btn-mini" onclick="toggleEditForm()">취소</button>
+                            <button type="submit" class="btn-mini" style="background:#007bff; color:white; border-color:#007bff;">수정 완료</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="admin-answer-box" th:if="${dto.answer == null}" style="background-color: #f9f9f9; border-color: #eee; color: #777; text-align: center;">
+                아직 답변이 등록되지 않았습니다.
+            </div>
+            <div class="answer-form-area" sec:authorize="hasRole('ADMIN')" th:if="${dto.status.name() != 'COMPLETE'}">
+                <h4>관리자 답변 등록</h4>
+                <form th:action="@{/inquiry/answer}" method="post">
+                    <input type="hidden" name="id" th:value="${dto.id}">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <textarea name="answerContent" class="form-control" style="min-height: 150px;" required placeholder="답변 내용을 입력하세요."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn-submit" style="padding: 10px 25px;">답변 완료</button>
+                    </div>
+                </form>
+            </div>
+            <div class="btn-area">
+                <a th:if="${link == 'admin'}"
+                   th:href="@{/inquiry/adminList(page=${pageRequestDTO.page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword}, status=${status})}"
+                   class="btn-list">
+                    목록 (관리자)
+                </a>
+                <a th:unless="${link == 'admin'}"
+                   th:href="@{/inquiry/inquiryList(page=${pageRequestDTO.page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword}, status=${status})}"
+                   class="btn-list">
+                    목록
+                </a>
+                <th:block sec:authorize="isAuthenticated()" th:if="${dto.status.name() != 'COMPLETE'}">
+                    <a th:href="@{/inquiry/inquiryUpdate(id=${dto.id}, page=${pageRequestDTO.page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword}, status=${status})}" class="btn-submit" style="background-color: #ffc107; color: #333;">수정</a>
+                    <form th:action="@{/inquiry/inquiryDelete}" method="post" style="display:inline;" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <input type="hidden" name="id" th:value="${dto.id}">
+                        <button type="submit" class="btn-cancel" style="background-color: #dc3545; color: white;">삭제</button>
+                    </form>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="~{include/footer :: footer}"></div>
+<th:block th:replace="~{include/messageScript :: alertFragment}"></th:block>
+
+<script th:inline="javascript">
+    function toggleEditForm() {
+        const originalDiv = document.getElementById('originalAnswer');
+        const editFormDiv = document.getElementById('editAnswerForm');
+
+        if (editFormDiv.style.display === 'none') {
+            originalDiv.style.display = 'none';
+            editFormDiv.style.display = 'block';
+        } else {
+            originalDiv.style.display = 'block';
+            editFormDiv.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>카카오 로그인</title>
+
+  <script th:inline="javascript">
+    window.onload = function() {
+        var msg = /*[[${message}]]*/ '';
+        var url = /*[[${redirectUrl}]]*/ '/member/memberMain';
+
+        if(msg) alert(msg);
+
+        try {
+            if(window.opener && !window.opener.closed) {
+                window.opener.location.href = url;
+            } else {
+                location.href = url;
+            }
+        } catch(e) {
+            location.href = url;
+        }
+
+        window.close();
+    };
+  </script>
+
+</head>
+<body></body>
+</html>

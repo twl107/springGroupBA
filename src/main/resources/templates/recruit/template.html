@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Recruit - Resume Template</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/recruit.css}">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+
+  <section class="sub-visual"
+           th:style="'background-image: url(' + @{/images/recruit/template_bg.jpg} + ');'">
+    <div class="sub-visual-content">
+      <h2>Resume Template</h2>
+      <p>그린소프트 지원자를 위한 공식 이력서 양식입니다.</p>
+    </div>
+  </section>
+
+  <section class="recruit-section">
+    <h3 class="section-title">이력서 양식 다운로드</h3>
+    <p class="section-intro">
+      PDF, HWP, DOCX 버전으로 제공합니다. 원하는 파일을 선택해주세요.
+    </p>
+
+    <div class="download-buttons">
+      <a th:href="@{/files/greensoft_resume_guide.pdf}" download>이력서 작성 방법</a>
+    </div>
+    <br>
+    <hr>
+    <div class="download-buttons">
+      <a th:href="@{/files/greensoft_resume.pdf}" download>PDF 다운로드</a>
+      <a th:href="@{/files/greensoft_resume.hwp}" download>HWP 다운로드</a>
+      <a th:href="@{/files/greensoft_resume.doc}" download>DOC 다운로드</a>
+    </div>
+  </section>
+
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

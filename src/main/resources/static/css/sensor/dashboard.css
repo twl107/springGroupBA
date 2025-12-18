@@ -1,0 +1,664 @@
+
+/* ---------------------------
+   GLOBAL
+---------------------------- */
+
+body {
+  background: #f2f4f7;
+  margin: 0;
+  padding: 0;
+  font-family: 'Pretendard', sans-serif;
+  color: #2c3e50;
+}
+
+.sensor-dashboard {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: calc(100vh - 80px); /* header 제외 */
+  margin-top: 80px;
+  position: relative; /* 🔥 좌측 토글 버튼 기준 */
+}
+
+
+/* ---------------------------
+   LEFT PANEL (Filter Panel)
+---------------------------- */
+
+.sd-left {
+  width: 250px;
+  min-width: 250px;
+  background: #ffffff;
+  border-right: 1px solid #e0e4ea;
+
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 80px);
+
+  overflow: hidden; /* 🔥 중요 */
+}
+
+.sd-left-inner {
+  height: 100%;
+  padding: 15px 18px;
+  padding-right: 42px;      /* 🔥 토글 버튼 안전 영역 */
+  box-sizing: border-box;
+
+  overflow-y: auto;         /* 스크롤은 여기서 */
+  overflow-x: visible;      /* 🔥 가로 절대 안 자름 */
+}
+
+
+/* 🔥 접힘 상태 */
+.sd-left.collapsed {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
+.sd-left.collapsed .sd-left-inner {
+  padding-right: 0;
+}
+
+.sd-left-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #34495e;
+}
+
+.sd-left-sub {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin-top: 6px;
+}
+
+.sd-left > .sd-group:last-child {
+  margin-top: auto;     /* 🔥 시뮬레이터 제어를 아래로 고정 */
+}
+
+
+/* ---------------------------
+   LEFT PANEL TOGGLE BUTTON
+---------------------------- */
+
+.sd-left-toggle {
+  position: fixed;
+  top: 120px;
+  left: 250px; /* 패널 폭과 동일 */
+  z-index: 950;
+  width: 26px;
+  height: 60px;
+  border-radius: 0 10px 10px 0;
+  border: 1px solid #d0d4e4;
+  border-left: none;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #34495e;
+  padding: 0;
+}
+
+/* 패널 접힘 시 버튼을 화면 왼쪽으로 붙임 */
+#sdLeft.collapsed + .sd-left-toggle {
+  left: 0;
+}
+
+/* 열림 상태 */
+.sd-left-toggle {
+  left: 250px;
+}
+
+/* ---------------------------
+   Form / Labels
+---------------------------- */
+
+.sd-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sd-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.sd-label-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.sd-select,
+.sd-input {
+  height: 38px;              /* ⭐ 핵심 */
+  padding: 6px 10px;
+  font-size: 13px;
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+
+.sd-select:focus,
+.sd-input:focus {
+  border-color: #2980b9;
+  outline: none;
+}
+
+input[type="datetime-local"] {
+  line-height: normal;   /* 브라우저 고정값 초기화 */
+}
+
+
+/* ---------------------------
+   Buttons
+---------------------------- */
+
+.sd-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.15s;
+  border: none;
+}
+
+.sd-btn-primary {
+  background: #2980b9;
+  color: white;
+}
+
+.sd-btn-primary:hover {
+  background: #2472a3;
+}
+
+.sd-btn-outline {
+  background: white;
+  border: 1px solid #95a5a6;
+  color: #34495e;
+}
+
+.sd-btn-outline:hover {
+  background: #f0f4f7;
+}
+
+.sd-btn-danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.sd-btn-danger:hover {
+  background: #d14536;
+}
+
+
+/* ---------------------------
+   MODE BADGE
+---------------------------- */
+
+.sd-mode {
+  margin-top: 4px;
+}
+
+.sd-badge {
+  display: inline-block;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sd-badge-realtime {
+  background: #e8f4ff;
+  color: #2e86de;
+  border: 1px solid #d0e7ff;
+}
+
+.sd-badge-history {
+  background: #fff6e5;
+  color: #e67e22;
+  border: 1px solid #ffe4c1;
+}
+
+.sd-mode-hint {
+  display: block;
+  font-size: 11px;
+  color: #7f8c8d;
+  margin-top: 5px;
+  line-height: 1.2;
+}
+
+
+/* ---------------------------
+   ACTIVE SENSOR LIST
+---------------------------- */
+
+.sd-sensor-list-group {
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.sd-sensor-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sd-sensor-list-header span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sd-sensor-info {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.sd-sensor-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e1e5eb;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.sd-sensor-item {
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 1px solid #eef0f4;
+  transition: 0.15s;
+}
+
+.sd-sensor-item:hover {
+  background: #f4f7fb;
+}
+
+.sd-sensor-item.active {
+  background: #3498db !important;
+  color: white;
+  font-weight: 600;
+}
+
+
+/* ---------------------------
+   SENSOR SHAKE EFFECT
+---------------------------- */
+
+@keyframes shake {
+  0% { transform: translateX(0px); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-3px); }
+  100% { transform: translateX(0px); }
+}
+
+.sd-sensor-item.shake {
+  animation: shake 0.3s ease-in-out;
+  background: rgba(255, 80, 80, 0.2);
+}
+
+
+/* ---------------------------
+   SIMULATION CONTROLS
+---------------------------- */
+
+.sd-sim-controls {
+  margin-top: 4px;
+}
+
+.sd-sim-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sd-sim-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sd-sim-hint {
+  font-size: 11px;
+  color: #7f8c8d;
+  margin-top: 6px;
+}
+
+
+/* ---------------------------
+   RIGHT PANEL (Main area)
+---------------------------- */
+
+/* 기본 상태: 원본 UI 그대로 */
+.sd-main {
+  flex: 1;
+  margin-left: 0 !important; /* 🔥 문제 해결 */
+  padding: 20px 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: width .3s ease;
+}
+
+/* 패널 접힘 상태에서 메인 확장 */
+.sd-left.collapsed + .sd-left-toggle + .sd-main {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+/* ---------------------------
+   MAIN HEADER
+---------------------------- */
+
+.sd-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;      /* ⭐ 추가 */
+  gap: 12px;            /* ⭐ 추가 */
+}
+
+.sd-main-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.sd-main-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #34495e;
+}
+
+.sd-main-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+/* 헤더 오른쪽(타임스탬프 + 이벤트 박스) */
+.sd-main-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;       /* ⭐ 추가 */
+}
+
+.sd-main-header-right * {
+  white-space: nowrap;
+}
+
+.sd-timestamp-box {
+  background: #ffffff;
+  border: 1px solid #dfe4ea;
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+  text-align: right;
+}
+
+.sd-timestamp-box span {
+  display: block;
+  color: #7f8c8d;
+}
+
+.sd-timestamp-box b {
+  font-size: 15px;
+  color: #2c3e50;
+}
+
+/* 이벤트 카운트 박스 */
+.sd-event-box {
+  background: #fff3f0;
+  border: 1px solid #ffb3a1;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sd-event-box span:first-child {
+  color: #c0392b;
+}
+
+.sd-event-box b {
+  font-size: 18px;
+  color: #e74c3c;
+}
+
+
+/* ---------------------------
+   CHART
+---------------------------- */
+
+.sd-chart-wrapper {
+  width: 100%;
+  height: 380px;
+  background: #ffffff;
+  border: 1px solid #e0e4ea;
+  border-radius: 10px;
+  padding: 15px;
+  padding-right: 140px; /* 토스트가 겹치지 않도록 안전 공간 확보 */
+  box-sizing: border-box;
+  transition: box-shadow 0.3s ease;
+}
+
+.sd-chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 차트 하이라이트(이벤트 시) */
+@keyframes blinkBg {
+  0% { box-shadow: 0 0 24px rgba(255, 0, 0, 0.6); }
+  100% { box-shadow: 0 0 0 rgba(0, 0, 0, 0); }
+}
+
+.sd-chart-wrapper.event-blink {
+  animation: blinkBg 0.3s;
+}
+
+
+/* ---------------------------
+   STATS CARDS
+---------------------------- */
+
+.sd-stats-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+}
+
+.sd-stat-card {
+  background: #ffffff;
+  border: 1px solid #e0e4ea;
+  border-radius: 10px;
+  padding: 12px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sd-stat-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #34495e;
+}
+
+.sd-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+#statUnit {
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+
+/* ---------------------------
+   LOG TOGGLE BUTTON
+---------------------------- */
+
+.log-toggle-btn {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  background: #3a6df0;
+  color: white;
+  padding: 14px 22px;
+  border-radius: 10px;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 999;
+}
+
+
+/* ---------------------------
+   LOG PANEL
+---------------------------- */
+
+.log-panel {
+  position: fixed;
+  top: 0;
+  right: -300px; /* 기본 숨김 */
+  width: 300px;
+  height: 100vh;
+  background: #f7f9fc;
+  box-shadow: -3px 0 10px rgba(0,0,0,0.2);
+  z-index: 1000;
+  transition: right 0.35s ease;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px 0 0 20px;
+}
+
+.log-panel.active {
+  right: 0;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  background: #3a6df0;
+  color: white;
+  font-size: 18px;
+  border-radius: 20px 0 0 0;
+}
+
+.log-close-btn {
+  background: rgba(255,255,255,0.3);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+}
+
+.log-content {
+  padding: 15px 20px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: 14px;
+}
+
+/* 개별 로그 아이템 */
+.log-item {
+  padding: 6px 0;
+  border-bottom: 1px dashed #dde3f0;
+  font-size: 13px;
+}
+
+.log-item b {
+  margin-right: 6px;
+}
+
+.log-high {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.log-low {
+  color: #2980b9;
+  font-weight: 600;
+}
+
+
+/* ---------------------------
+   TOAST CONTAINER & TOAST
+---------------------------- */
+
+.sd-toast-container {
+  position: fixed;
+  top: 120px;
+  right: 10px;
+  z-index: 1100;
+  pointer-events: none;
+}
+
+.sd-toast {
+  min-width: 260px;
+  max-width: 340px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  opacity: 0.95;
+}
+
+.sd-toast-high {
+  background: #e74c3c;
+}
+
+.sd-toast-low {
+  background: #2980b9;
+}
+
+
+/* ---------------------------
+   SCREEN FLASH OVERLAY
+---------------------------- */
+
+#eventFlash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 0, 0, 0.28);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+  z-index: 2000;
+}
+
+
+.history-notice {
+  background: #fff7db;
+  border: 1px solid #e8cc77;
+  padding: 10px 14px;
+  margin: 10px 0;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.history-notice a {
+  color: #d35400;
+  font-weight: 600;
+}

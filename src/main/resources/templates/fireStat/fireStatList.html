@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>소방청 화재 통계 조회</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/fireStat.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+<section class="sub-visual" th:style="'background-image: url(' + @{/images/content/img_visual01.jpg} + ');'">
+    <div class="sub-visual-content">
+        <h2>소방청 화재 통계</h2>
+        <p>빅데이터 기반 전국 화재 현황 분석</p>
+    </div>
+</section>
+<main class="main-content">
+    <div class="sub-content-container">
+        <div class="top-nav">
+            <a th:href="@{/fireStat/fireStatList}" class="btn-back">↺ 검색 초기화</a>
+        </div>
+        <div class="search-box">
+            <form th:action="@{/fireStat/search}" method="post" onsubmit="showLoading()">
+                <label for="year">📅 조회 연도</label>
+                <select name="year" id="year">
+                    <option value="2024" th:selected="${selectedYear == 2024}">2024년</option>
+                    <option value="2023" th:selected="${selectedYear == 2023}">2023년</option>
+                    <option value="2022" th:selected="${selectedYear == 2022}">2022년</option>
+                    <option value="2021" th:selected="${selectedYear == 2021}">2021년</option>
+                    <option value="2020" th:selected="${selectedYear == 2020}">2020년</option>
+                </select>
+                <button type="submit" class="btn-search">API 데이터 분석 조회 🔍</button>
+            </form>
+            <div id="loadingMsg" style="display:none;">
+                <span class="spinner"></span>
+                <span>데이터를 분석 중입니다... 잠시만 기다려주세요</span>
+                <span class="spinner"></span>
+            </div>
+        </div>
+        <div th:if="${stats != null and !stats.isEmpty()}">
+            <div style="text-align: center;">
+                <h2 class="result-title" th:text="|${selectedYear}년도 전국 화재 현황|"></h2>
+            </div>
+            <div class="summary-card">
+                <div class="card">
+                    <h3>총 화재 건수</h3>
+                    <p th:text="${#numbers.formatInteger(totalFireCount, 0, 'COMMA') + ' 건'}">0 건</p>
+                </div>
+                <div class="card blue">
+                    <h3>총 인명 피해</h3>
+                    <p th:text="${#numbers.formatInteger(totalCasualtyCount, 0, 'COMMA') + ' 명'}">0 명</p>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="fireChart"></canvas>
+            </div>
+            <table class="fire-table">
+                <thead>
+                <tr>
+                    <th style="width:10%">번호</th>
+                    <th>지역</th>
+                    <th>화재 건수</th>
+                    <th>인명 피해</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="stat, iter : ${stats}">
+                    <td th:text="${iter.count}">1</td>
+                    <td th:text="${stat.location}" style="font-weight:bold;">서울</td>
+                    <td th:text="${#numbers.formatInteger(stat.fireCount, 0, 'COMMA') + '건'}">100건</td>
+                    <td th:text="${#numbers.formatInteger(stat.casualtyCount, 0, 'COMMA') + '명'}" style="color:#e74c3c; font-weight:bold;">10명</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${stats != null and stats.isEmpty()}" class="no-data-msg">
+            <h3>해당 연도의 데이터가 없습니다.</h3>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+<script th:inline="javascript">
+    function showLoading() {
+        document.getElementById('loadingMsg').style.display = 'flex';
+
+        const btn = document.querySelector('.btn-search');
+        btn.disabled = true;
+        btn.innerText = "분석 중...";
+        btn.style.backgroundColor = "#ccc";
+    }
+
+    const fireStats = [[${stats}]];
+
+    if (fireStats && fireStats.length > 0) {
+        const labels = fireStats.map(s => s.location);
+        const fireCounts = fireStats.map(s => s.fireCount);
+        const casualtyCounts = fireStats.map(s => s.casualtyCount);
+        const ctx = document.getElementById('fireChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '화재 건수',
+                        data: fireCounts,
+                        backgroundColor: 'rgba(255, 107, 107, 0.6)',
+                        borderColor: 'rgba(255, 107, 107, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        order: 2
+                    },
+                    {
+                        label: '인명 피해',
+                        data: casualtyCounts,
+                        type: 'line',
+                        borderColor: 'rgba(83, 82, 237, 1)',
+                        backgroundColor: 'rgba(83, 82, 237, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: 'rgba(83, 82, 237, 1)',
+                        pointRadius: 4,
+                        tension: 0.3,
+                        yAxisID: 'y1',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: '지역별 화재 및 인명피해 분포' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: '화재 건수' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        type: 'linear',
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: '인명 피해 (명)' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

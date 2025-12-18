@@ -1,0 +1,238 @@
+
+.sub-visual {
+    width: 100%;
+    height: 300px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.sub-visual::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+}
+
+.sub-visual-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: #fff;
+}
+
+.sub-visual-content h2 {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.sub-visual-content p {
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+.recruit-section {
+    width: 100%;
+    max-width: 1200px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.section-title {
+    font-size: 32px;
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.section-intro {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 40px;
+    line-height: 1.7;
+}
+
+.process-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+}
+
+.process-item {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    text-align: center;
+}
+
+.process-item img {
+    width: 200px;
+    height: 150px;
+    margin-bottom: 15px;
+}
+
+.process-item h4 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.welfare-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.welfare-item {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.welfare-item img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+}
+
+.welfare-item div {
+    padding: 20px;
+}
+
+.welfare-item h4 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.download-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 40px;
+}
+
+.download-buttons a {
+    padding: 14px 30px;
+    background: #2c3e50;
+    color: white;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+.apply-form {
+    max-width: 700px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 35px 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+}
+
+.apply-form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.apply-form input,
+.apply-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 15px;
+}
+
+.apply-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background: #1989ff;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: .2s;
+    text-align: center;
+    max-width: 260px;
+    width: auto;
+}
+
+.apply-form select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    background-color: #fff;
+}
+
+.apply-form select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52,152,219,0.25);
+}
+
+.apply-landing-box {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 30px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0px 4px 16px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.apply-landing-box h4 {
+  font-size: 22px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.apply-landing-box p {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 25px;
+}
+
+.apply-landing-box.active {
+  border-left: 6px solid #28a745;
+}
+
+.apply-landing-box.closed {
+  border-left: 6px solid #dc3545;
+}
+
+.apply-btn {
+  display: inline-block;
+  padding: 12px 30px;
+  background: #1989ff;
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: .2s;
+}
+
+.apply-btn:hover {
+  background: #0d6efd;
+}
+
+.back-btn {
+  display: inline-block;
+  padding: 10px 22px;
+  background: #6c757d;
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: .2s;
+}
+
+.back-btn:hover {
+  background: #5a6268;
+}

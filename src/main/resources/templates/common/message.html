@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Message</title>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    let msg = /*[[${msg}]]*/ "";
+    let url = /*[[${url}]]*/ "";
+
+    if (msg && msg !== "") {
+      alert(msg);
+    }
+
+    if (url && url !== "") {
+      // contextPath 자동 적용
+      window.location.href = /*[[@{${url}}]]*/ "";
+    }
+    /*]]>*/
+  </script>
+</head>
+<body></body>
+</html>

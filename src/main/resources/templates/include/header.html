@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+<body>
+
+<script th:inline="javascript">
+  /*<![CDATA[*/
+  const contextPath = /*[[@{/}]]*/ "/";
+  /*]]>*/
+</script>
+
+<header class="site-header" th:fragment="header">
+
+  <div class="logo">
+    <a th:href="@{/}">
+      <img th:src="@{/images/main/logo_greensoft.png}" alt="(주)그린소프트로고" class="greensoft-logo">
+    </a>
+  </div>
+
+  <nav class="main-navigation">
+    <ul>
+
+      <li class="dropdown">
+        <a href="javascript:void(0);">Business</a>
+        <ul class="dropdown-menu">
+          <li><a th:href="@{/content/business}">Business</a></li>
+          <li><a th:href="@{/content/clients}">Client Info</a></li>
+          <li><a th:href="@{/review/list}">Customer Review</a></li>
+          <li><a th:href="@{/fireStat/fireStatList}">FireDashboard</a></li>
+        </ul>
+      </li>
+
+      <li class="dropdown">
+        <a href="javascript:void(0);">Company</a>
+        <ul class="dropdown-menu">
+          <li><a th:href="@{/content/company}">About</a></li>
+          <li><a th:href="@{/content/contact}">Contact</a></li>
+
+          <li class="divider"></li>
+          <li><a th:href="@{/recruit/process}">Hiring Process</a></li>
+          <li><a th:href="@{/recruit/welfare}">Welfare</a></li>
+          <li><a th:href="@{/recruit/template}">Resume Template</a></li>
+          <li><a th:href="@{/recruit/apply}">Apply</a></li>
+        </ul>
+      </li>
+
+      <li><a th:href="@{/content/technology}">Technology</a></li>
+
+      <li><a th:href="@{/content/solution}">Solution</a></li>
+
+      <li class="dropdown">
+        <a href="javascript:void(0);">Monitoring</a>
+        <ul class="dropdown-menu">
+          <li><a th:href="@{/sensor/info}">Sensor info</a></li>
+          <li><a th:href="@{/sensor/dashboard}">Dashboard</a></li>
+          <li><a th:href="@{/sensor/dailyReport}">Daily Report</a></li>
+          <li><a th:href="@{/sensor/report}">MonthlyReport</a></li>
+        </ul>
+      </li>
+
+      <li class="dropdown">
+        <a href="javascript:void(0);">Community</a>
+        <ul class="dropdown-menu">
+          <li><a th:href="@{/notice/noticeList}">Notice</a></li>
+          <li><a th:href="@{/board/boardList}">Board</a></li>
+          <li><a th:href="@{/pds/pdsList}">PDS</a></li>
+          <li><a th:href="@{/inquiry/inquiryList}">QnA</a></li>
+          <li><a th:href="@{/gallery/galleryList}">Photo Gallery</a></li>
+          <li><a th:href="@{/dbShop/dbShopList}">Shop</a></li>
+        </ul>
+      </li>
+
+    </ul>
+  </nav>
+
+
+  <div class="header-utils">
+
+    <div sec:authorize="isAnonymous()">
+      <a th:href="@{/member/memberLogin}" class="header-btn login-btn">로그인</a>
+    </div>
+
+    <div sec:authorize="isAuthenticated() and hasRole('ADMIN')" class="user-menu">
+      <a th:href="@{/cart/cartList}" class="header-btn">장바구니 | </a>
+      <a th:href="@{/order/history}" class="header-btn">주문내역 | </a>
+      <a th:href="@{/member/memberMain}" class="header-btn">마이페이지 | </a>
+      <a th:href="@{/admin/adminMain}" class="header-btn">관리자페이지 | </a>
+      <a th:href="@{/member/memberLogout}" class="header-btn">로그아웃</a>
+    </div>
+
+    <div sec:authorize="isAuthenticated() and not hasRole('ADMIN')" class="user-menu">
+      <a th:href="@{/cart/cartList}" class="header-btn">장바구니 | </a>
+      <a th:href="@{/order/history}" class="header-btn">주문내역 | </a>
+      <a th:href="@{/member/memberMain}" class="header-btn">마이페이지 | </a>
+      <a th:href="@{/member/memberLogout}" class="header-btn">로그아웃</a>
+    </div>
+
+  </div>
+</header>
+
+<script th:fragment="header-script">
+  document.addEventListener("DOMContentLoaded", function() {
+
+    const currentPath = window.location.pathname.replace(contextPath, "/");
+
+    const navLinks = document.querySelectorAll('.main-navigation > ul > li > a');
+    navLinks.forEach(link => {
+      const linkPath = link.getAttribute('href');
+      if (linkPath && linkPath !== '/' && linkPath !== '#' &&
+          currentPath.startsWith(linkPath)) {
+        link.parentElement.classList.add('active');
+      }
+    });
+
+    const dropdownLinks = document.querySelectorAll('.dropdown-menu a');
+    dropdownLinks.forEach(link => {
+      const linkPath = link.getAttribute('href');
+      if (linkPath && currentPath.startsWith(linkPath)) {
+        link.closest('.dropdown').classList.add('active');
+      }
+    });
+
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Recruit - Apply</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/recruit.css}">
+  <style>
+    .job-item { margin-bottom: 24px; }
+    .job-title { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+    .job-desc { font-size: 15px; line-height: 1.7; color: #444; white-space: pre-line; }
+  </style>
+</head>
+<body>
+
+<div th:replace="~{include/header :: header}"></div>
+
+<main class="main-content">
+
+  <section class="sub-visual"
+           th:style="'background-image: url(' + @{/images/recruit/apply_bg.jpg} + ');'">
+    <div class="sub-visual-content">
+      <h2>Careers</h2>
+      <p>그린소프트와 함께 미래를 만들어갈 인재를 찾고 있습니다.</p>
+    </div>
+  </section>
+
+  <section class="recruit-section">
+
+    <h3 class="section-title">채용 안내</h3>
+    <p class="section-intro">현재 채용 여부 및 직무 안내 정보를 확인하세요.</p>
+
+    <!-- 진행 -->
+    <div th:if="${recruitOpen}" class="apply-landing-box active">
+
+      <h4>🚀 현재 채용이 진행중입니다!</h4>
+      <p>
+        아래 직무 안내 내용을 확인하신 뒤 지원해주세요.<br>
+        능동적이고 문제 해결 능력이 뛰어난 분을 기다립니다.
+      </p>
+
+      <div style="text-align:left; margin-top:20px;">
+        <h5 style="margin-bottom:12px; font-weight:600;">📌 모집 직무 안내</h5>
+
+        <ul style="list-style:none; padding-left:0; margin-top:10px;">
+
+          <li class="job-item">
+            <div class="job-title">백엔드 개발자</div>
+            <p class="job-desc" th:text="${cfg.backendDesc != null ? cfg.backendDesc : '관리자 준비 중'}"></p>
+          </li>
+
+          <li class="job-item">
+            <div class="job-title">프론트 개발자</div>
+            <p class="job-desc" th:text="${cfg.frontDesc != null ? cfg.frontDesc : '관리자 준비 중'}"></p>
+          </li>
+
+          <li class="job-item">
+            <div class="job-title">임베디드 개발자</div>
+            <p class="job-desc" th:text="${cfg.embeddedDesc != null ? cfg.embeddedDesc : '관리자 준비 중'}"></p>
+          </li>
+
+          <li class="job-item">
+            <div class="job-title">AI 개발자</div>
+            <p class="job-desc" th:text="${cfg.aiDesc != null ? cfg.aiDesc : '관리자 준비 중'}"></p>
+          </li>
+
+          <li class="job-item">
+            <div class="job-title">IoT 개발자</div>
+            <p class="job-desc" th:text="${cfg.iotDesc != null ? cfg.iotDesc : '관리자 준비 중'}"></p>
+          </li>
+
+        </ul>
+      </div>
+
+      <a th:href="@{/recruit/applyForm}" class="apply-btn" style="margin-top:25px;">지원하기</a>
+    </div>
+
+
+    <!-- 종료 -->
+    <div th:if="${!recruitOpen}" class="apply-landing-box closed">
+      <h4>⚠️ 현재 채용이 종료되었습니다.</h4>
+      <p>추후 채용 공고 시 다시 방문해주세요.</p>
+      <a th:href="@{/}" class="back-btn">메인으로</a>
+    </div>
+
+  </section>
+</main>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+
+.sub-visual {
+    width: 100%;
+    height: 450px;
+    margin-top: -80px;
+    background-size: cover;
+    background-position: center 15%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #ffffff;
+}
+
+.sub-visual::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.sub-visual-content {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.sub-visual-content h2 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.sub-visual-content p {
+    font-size: 1.2rem;
+    margin-top: 10px;
+    opacity: 0.9;
+}
+
+.sub-content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 20px;
+}
+
+.client-section {
+    margin-bottom: 80px;
+}
+
+.section-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.section-intro {
+    font-size: 1.1rem;
+    text-align: center;
+    color: #555;
+    line-height: 1.7;
+    margin-bottom: 50px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+.process-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px 20px;
+}
+
+.process-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 30px 20px;
+    text-align: center;
+    background-color: #ffffff;
+    transition: box-shadow 0.3s ease;
+}
+
+.process-item:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.process-item img {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+}
+
+.process-item .step-num {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.process-item p {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.5;
+}
+
+.service-process-image {
+    text-align: center;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.service-process-image img {
+    width: 100%;
+    max-width: 1000px;
+    height: auto;
+}
+
+
+@media (max-width: 992px) {
+    .process-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sub-visual {
+        height: 250px;
+    }
+    .sub-visual-content h2 {
+        font-size: 2.2rem;
+    }
+
+    .process-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+    }
+}

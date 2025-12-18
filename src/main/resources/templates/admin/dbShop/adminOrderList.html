@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 - 배송 현황 관리</title>
+
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Noto Sans KR', sans-serif; color: #333; }
+        .admin-content { padding: 20px; }
+        .list-container { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); max-width: 1500px; margin: 0 auto; }
+        .page-header { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .page-header h2 { font-size: 1.5rem; font-weight: 700; margin: 0; color: #333; }
+
+        .search-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
+        .search-box select, .search-box input[type="text"], .search-box input[type="date"] { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
+        .search-box span { font-weight: 500; color: #555; margin: 0 5px; }
+        .btn-search { padding: 8px 25px; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s; }
+        .btn-search:hover { background: #555; }
+        .btn-reset { padding: 8px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; font-size: 0.9rem; transition: background 0.3s; }
+        .btn-reset:hover { background: #5a6268; }
+
+        .batch-action-bar { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-bottom: 15px; padding: 15px; background: #f1f3f5; border-radius: 8px; border: 1px solid #e9ecef; }
+        .btn-batch { padding: 8px 20px; background: #495057; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; }
+        .btn-batch:hover { background: #212529; }
+
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        .admin-table th { background: #f8f9fa; padding: 15px 10px; border-bottom: 2px solid #ddd; font-weight: 600; color: #444; white-space: nowrap; text-align: center; }
+        .admin-table td { padding: 15px 10px; border-bottom: 1px solid #eee; text-align: center; vertical-align: middle; color: #555; }
+        .admin-table tbody tr:hover { background-color: #f8faff; }
+        .receiver-info { font-size: 0.9rem; color: #555; text-align: left; line-height: 1.5; }
+        .status-select { padding: 6px; border-radius: 4px; border: 1px solid #ccc; margin-right: 5px; }
+        .btn-update { padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: background 0.3s; }
+        .btn-update:hover { background: #0056b3; }
+
+        .pagination { display: flex; justify-content: center; margin-top: 40px; list-style: none; padding: 0; gap: 5px; }
+        .pagination a { display: block; padding: 8px 14px; border: 1px solid #ddd; color: #555; text-decoration: none; border-radius: 4px; background: #fff; transition: all 0.2s; }
+        .pagination a:hover { background: #f1f1f1; }
+        .pagination .active a { background: #333; color: white; border-color: #333; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #333; }
+    </style>
+</head>
+<body>
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+
+<main class="admin-content">
+
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        ☰ 메뉴
+    </button>
+
+    <div class="sub-content-container">
+
+        <div class="list-container">
+
+            <div class="page-header">
+                <h2>배송/주문 목록</h2>
+            </div>
+
+            <form th:action="@{/admin/dbShop/adminOrderList}" method="get" class="search-box">
+                <input type="hidden" name="page" value="1">
+
+                <select name="status">
+                    <option value="">전체 상태</option>
+                    <option th:each="statusEnum : ${orderStatusList}"
+                            th:value="${statusEnum.name()}"
+                            th:text="${statusEnum.description}"
+                            th:selected="${searchStatus != null and #strings.equals(statusEnum.name(), searchStatus.toString())}"></option>
+                </select>
+
+                <span>기간:</span>
+                <input type="date" name="startDate" id="startDate" th:value="${startDate}" onchange="checkDateRange()">
+                <span>~</span>
+                <input type="date" name="endDate" id="endDate" th:value="${endDate}" onchange="checkDateRange()">
+
+                <select name="type">
+                    <option value="n" th:selected="${pageRequestDTO.type == 'n'}">주문자명</option>
+                    <option value="r" th:selected="${pageRequestDTO.type == 'r'}">수령인명</option>
+                    <option value="p" th:selected="${pageRequestDTO.type == 'p'}">상품명</option>
+                    <option value="nr" th:selected="${pageRequestDTO.type == 'nr'}">주문자+수령인</option>
+                </select>
+                <input type="text" name="keyword" th:value="${pageRequestDTO.keyword}" placeholder="검색어를 입력하세요">
+
+                <button type="submit" class="btn-search">검색</button>
+                <a th:href="@{/admin/dbShop/adminOrderList}" class="btn-reset">초기화</a>
+            </form>
+
+            <div class="batch-action-bar">
+                <span style="font-weight:bold; font-size: 0.95rem;">선택 주문 일괄 변경:</span>
+                <select id="batchStatusSelect" class="status-select" style="min-width: 150px;">
+                    <option value="">상태 선택</option>
+                    <option th:each="statusEnum : ${orderStatusList}"
+                            th:value="${statusEnum}"
+                            th:text="${statusEnum.description}"></option>
+                </select>
+                <button type="button" class="btn-batch" onclick="updateBatchStatus()">변경 적용</button>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th width="40">
+                        <input type="checkbox" id="checkAll" onchange="toggleAll(this)">
+                    </th>
+                    <th width="50">No</th>
+                    <th width="80">주문번호</th>
+                    <th width="150">주문자(ID)</th>
+                    <th>주문상품</th>
+                    <th width="100">총금액</th>
+                    <th width="250">배송정보</th>
+                    <th width="120">주문일시</th>
+                    <th width="100">현재상태</th>
+                    <th width="180">상태변경</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${result.dtoList.isEmpty()}">
+                    <td colspan="10" style="padding: 60px 0; color: #888;">검색된 주문 내역이 없습니다.</td>
+                </tr>
+
+                <tr th:each="order, status : ${result.dtoList}">
+                    <td>
+                        <input type="checkbox" name="orderIds" class="order-chk" th:value="${order.id}">
+                    </td>
+
+                    <td th:text="${result.totalCount - ((result.page - 1) * result.size) - status.index}"></td>
+                    <td th:text="${order.id}">101</td>
+                    <td>
+                        <div th:text="${order.member?.name}" style="font-weight:bold;">홍길동</div>
+                        <div style="font-size:0.8rem; color:#888;">([[${order.member?.email}]])</div>
+                    </td>
+                    <td style="text-align: left; padding-left: 20px;">
+                        <div th:each="item : ${order.orderItems}" style="margin-bottom: 2px;">
+                            • [[${item.product.name}]] <span style="color:#007bff; font-weight:500;">([[${item.count}]]개)</span>
+                        </div>
+                    </td>
+                    <td th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA') + '원'}" style="font-weight:500;"></td>
+                    <td class="receiver-info">
+                        <div style="font-weight:500; margin-bottom:3px;">
+                            [[${order.receiverName}]] ([[${order.receiverPhone}]])
+                        </div>
+                        <div style="color:#666;">[[${order.address}]]</div>
+                    </td>
+                    <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}"></td>
+
+                    <td>
+                        <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:#e7f1ff; color:#007bff; font-weight:bold; font-size:0.85rem;"
+                              th:text="${order.status.description}"></span>
+                    </td>
+
+                    <td>
+                        <form th:action="@{/admin/order/updateStatus}" method="post"
+                              style="display:flex; gap:5px; justify-content:center; align-items:center;"
+                              onsubmit="return confirm('배송 상태를 변경하시겠습니까?');">
+
+                            <input type="hidden" name="orderId" th:value="${order.id}">
+                            <input type="hidden" name="page" th:value="${result.page}">
+                            <input type="hidden" name="type" th:value="${pageRequestDTO.type}">
+                            <input type="hidden" name="keyword" th:value="${pageRequestDTO.keyword}">
+                            <input type="hidden" name="startDate" th:value="${startDate}">
+                            <input type="hidden" name="endDate" th:value="${endDate}">
+                            <input type="hidden" name="searchStatus" th:value="${searchStatus}">
+
+                            <select name="status" class="status-select">
+                                <option th:each="statusEnum : ${orderStatusList}"
+                                        th:value="${statusEnum}"
+                                        th:text="${statusEnum.description}"
+                                        th:selected="${statusEnum == order.status}"></option>
+                            </select>
+                            <button type="submit" class="btn-update">변경</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <ul class="pagination" th:if="${result.totalPage > 0}">
+                <li th:if="${result.prev}">
+                    <a th:href="@{/admin/dbShop/adminOrderList(page=${result.start - 1}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword}, startDate=${startDate}, endDate=${endDate}, searchStatus=${searchStatus})}">&lt;</a>
+                </li>
+
+                <li th:each="pageNum : ${result.pageList}" th:classappend="${result.page == pageNum} ? 'active'">
+                    <a th:href="@{/admin/dbShop/adminOrderList(page=${pageNum}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword}, startDate=${startDate}, endDate=${endDate}, searchStatus=${searchStatus})}">[[${pageNum}]]</a>
+                </li>
+
+                <li th:if="${result.next}">
+                    <a th:href="@{/admin/dbShop/adminOrderList(page=${result.end + 1}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword}, startDate=${startDate}, endDate=${endDate}, searchStatus=${searchStatus})}">&gt;</a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</main>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const ctx = /*[[@{/}]]*/ "/";
+    /*]]>*/
+
+    function checkDateRange() {
+        const start = document.getElementById('startDate');
+        const end = document.getElementById('endDate');
+
+        if (!start || !end) return;
+
+        if (start.value && end.value) {
+            if (start.value > end.value) {
+                alert("시작일은 종료일보다 늦을 수 없습니다.");
+                end.value = start.value;
+            }
+        }
+
+        if (start.value) end.min = start.value;
+        if (end.value) start.max = end.value;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        checkDateRange();
+    });
+
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.admin-sidebar');
+        if(sidebar) {
+            sidebar.classList.toggle('active');
+        }
+    }
+
+    function toggleAll(source) {
+        const checkboxes = document.querySelectorAll('.order-chk');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    }
+
+    function updateBatchStatus() {
+        const statusSelect = document.getElementById('batchStatusSelect');
+        const status = statusSelect.value;
+
+        if (!status) {
+            alert("변경할 상태를 선택해주세요.");
+            statusSelect.focus();
+            return;
+        }
+
+        const checkedBoxes = document.querySelectorAll('.order-chk:checked');
+        if (checkedBoxes.length === 0) {
+            alert("상태를 변경할 주문을 선택해주세요.");
+            return;
+        }
+
+        const orderIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+
+        if (!confirm(`선택한 ${orderIds.length}건의 주문 상태를 '${statusSelect.options[statusSelect.selectedIndex].text}'(으)로 변경하시겠습니까?`)) {
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        const url = /*[[@{/admin/order/updateBatchStatus}]]*/ '/admin/order/updateBatchStatus';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({
+                orderIds: orderIds,
+                status: status
+            })
+        })
+            .then(response => {
+                if (response.ok) {
+                    alert("일괄 변경되었습니다.");
+                    location.reload();
+                } else {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("변경 중 오류가 발생했습니다.\n" + error.message);
+            });
+    }
+</script>
+
+</body>
+</html>

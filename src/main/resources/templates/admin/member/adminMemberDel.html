@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <title>회원탈퇴 관리 - 관리자</title>
+
+  <link rel="stylesheet" th:href="@{/css/admin/member.css}">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+
+  <style>
+    .search-form {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 10px;
+    }
+    .search-select-sm {
+      width: 120px;
+    }
+    .search-form .form-select-sm,
+    .search-form .form-control-sm,
+    .search-form .btn-sm {
+      height: 34px;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .btn-search-wide {
+      padding: 0 18px;
+      white-space: nowrap;
+    }
+  </style>
+
+  <script th:inline="javascript">
+    const ctx = /*[[@{/}]]*/ "";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const memberDelModal = document.getElementById('memberDelModal');
+      const form = document.getElementById('memberDelForm');
+
+      memberDelModal.addEventListener('show.bs.modal', event => {
+          const button = event.relatedTarget;
+          const id = button.getAttribute('data-id');
+          const nick = button.getAttribute('data-nickname');
+
+          document.getElementById('modalNickname').innerText = nick;
+          form.setAttribute('action', ctx + 'admin/members/memberDel/' + id);
+      });
+    });
+  </script>
+</head>
+
+<body>
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+<div th:replace="~{include/message :: alertMessage}"></div>
+
+<div class="container mt-4">
+  <!-- 상단 제목 -->
+  <div class="mb-4">
+    <h3 class="fw-bold mb-1">회원탈퇴 관리</h3>
+    <small class="text-secondary">탈퇴한 회원을 관리할 수 있습니다.</small>
+  </div>
+
+  <!-- 버튼 그룹 -->
+  <div class="d-flex mb-3 admin-menu">
+    <a th:href="@{/admin/members/list}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'list'} ? ' active'">회원 목록</a>
+    <a th:href="@{/admin/members/grade}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'grade'} ? ' active'">등급 관리</a>
+    <a th:href="@{/admin/members/memberDel}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'memberDel'} ? ' active'">탈퇴 회원</a>
+    <a th:href="@{/admin/members/mail}" class="btn btn-sm" th:classappend="${pageVO.currentPage == 'mailSend'} ? ' active'">메일/SMS 발송</a>
+  </div>
+
+  <!-- 검색 영역 -->
+  <div class="row mb-3">
+    <div class="col-auto">
+      <form th:action="@{/admin/members/memberDel}" method="get" class="search-form">
+        <select class="form-select form-select-sm search-select-sm" name="search">
+          <option value="mid" th:selected="${pageVO.search == 'mid'}">아이디</option>
+          <option value="name" th:selected="${pageVO.search == 'name'}">이름</option>
+          <option value="email" th:selected="${pageVO.search == 'email'}">이메일</option>
+        </select>
+        <input type="text"
+               class="form-control form-control-sm"
+               name="keyword"
+               th:value="${pageVO.searchString}"
+               placeholder="검색어 입력">
+        <button type="submit" class="btn btn-sm btn-primary btn-search-wide">검색</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="table-responsive mb-4">
+    <table class="table table-hover table-striped table-bordered align-middle text-center">
+      <thead class="table-light">
+      <tr>
+        <th scope="col">NO</th>
+        <th scope="col">아이디</th>
+        <th scope="col">이름</th>
+        <th scope="col">성별</th>
+        <th scope="col">닉네임</th>
+        <th scope="col">이메일</th>
+        <th scope="col">전화번호</th>
+        <th scope="col">탈퇴 요청일</th>
+        <th scope="col">자동탈퇴 예정일</th>
+        <th scope="col">상태</th>
+        <th scope="col">관리</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr th:each="u, st : ${pageVO.memberList}">
+        <td th:text="${pageVO.totRecCnt - ((pageVO.pag - 1) * pageVO.pageSize + st.index)}"></td>
+        <td th:text="${u.mid}"></td>
+        <td th:text="${u.name}"></td>
+        <td th:text="${u.gender}"></td>
+        <td th:text="${u.nickName}"></td>
+        <td th:text="${u.email}"></td>
+        <td th:text="${u.tel}"></td>
+        <td th:text="${u.deleteRequestDate != null ? #temporals.format(u.deleteRequestDate, 'yyyy-MM-dd') : '-'}"></td>
+        <td th:text="${u.deleteRequestDate != null ? #temporals.format(u.deleteRequestDate.plusDays(7), 'yyyy-MM-dd') : '-'}"
+            class="fw-semibold text-danger"></td>
+
+        <td>
+          <span th:if="${u.userDel.name() == 'NO'}" class="badge bg-warning text-dark">탈퇴 보류</span>
+          <span th:if="${u.userDel.name() == 'OK'}" class="badge bg-secondary">탈퇴 처리중</span>
+        </td>
+
+        <td>
+          <a href="#"
+             class="btn btn-outline-danger btn-sm"
+             th:attr="data-id=${u.id}, data-nickname=${u.nickName}"
+             data-bs-toggle="modal"
+             data-bs-target="#memberDelModal">
+            탈퇴 처리
+          </a>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(pageVO.memberList)}">
+        <td colspan="11" class="text-muted">탈퇴한 회원이 없습니다.</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 페이지네이션 -->
+  <th:block th:replace="~{include/pagination :: pagination('/admin/members/memberDel', ${pageVO})}"></th:block>
+</div>
+
+<!-- 모달 -->
+<div class="modal fade" id="memberDelModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">회원 탈퇴</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <p>
+          <strong id="modalNickname" class="text-primary"></strong> 회원을<br>
+          정말 <span class="fw-bold text-danger">탈퇴 처리</span>하시겠습니까?
+        </p>
+        <p class="text-secondary small">
+          ※ 탈퇴 처리 시 계정은 즉시 삭제됩니다.
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+        <form id="memberDelForm" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-danger">탈퇴 확정</button>
+        </form>
+      </div>
+  </div>
+</div>
+</body>
+</html>

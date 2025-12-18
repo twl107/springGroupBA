@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>FAQ</title>
+  <th:block th:insert="~{include/bs5}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <link rel="stylesheet" th:href="@{/css/member/main.css}">
+
+  <style>
+    /* 전체 간격 */
+    .accordion {
+      margin-bottom: 25px;
+    }
+
+    /* 질문 버튼 스타일 */
+    .accordion-button {
+      font-size: 1.05rem;
+      font-weight: 600;
+      padding: 18px 20px;
+      background: #ffffff;
+      transition: all 0.25s ease;
+    }
+
+    /* Hover 시 질문 강조 */
+    .accordion-button:hover {
+      background-color: #f7faff;
+      color: #0b5ed7;
+    }
+
+    /* 펼쳐졌을 때 질문 스타일 */
+    .accordion-button:not(.collapsed) {
+      background-color: #eaf2ff !important;
+      color: #0b5ed7 !important;
+      box-shadow: inset 0 -1px 0 #d4e1ff;
+    }
+
+    /* 아코디언 아이템 */
+    .accordion-item {
+      margin-bottom: 16px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e3e7ee;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s ease;
+    }
+
+    /* 펼쳐질 때 카드 조금 확대 효과 */
+    .accordion-item:has(.show) {
+      transform: scale(1.01);
+      border-color: #aac7ff;
+      box-shadow: 0 4px 10px rgba(0, 80, 255, 0.08);
+    }
+
+    /* 답변 박스 */
+    .accordion-body {
+      background: #fafbff;
+      padding: 20px 22px !important;
+      line-height: 1.65;
+      font-size: 0.95rem;
+
+      border-left: 4px solid #0b5ed730;
+      border-radius: 0 0 10px 10px;
+
+      animation: fadeIn 0.25s ease;
+    }
+
+    /* 부드러운 등장 효과 */
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-3px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 카테고리 제목 */
+    h4 {
+      font-weight: 700;
+      color: #2d384a;
+      border-left: 5px solid #0b5ed7;
+      padding-left: 10px;
+      margin-bottom: 18px !important;
+    }
+  </style>
+</head>
+
+<body>
+<div th:replace="~{include/header :: header}"></div>
+
+<div class="container my-5" style="max-width: 700px; margin-top: 100px !important;">
+  <h2 class="text-center mb-4">자주 묻는 질문 (FAQ)</h2>
+
+  <!-- 카테고리 -->
+  <div th:each="entry : ${groupedFaq}">
+
+    <!-- 카테고리 제목 -->
+    <h4 class="mt-4 mb-3" th:text="${entry.key}"></h4>
+
+    <!-- 카테고리별 독립 -->
+    <div class="accordion"
+         th:with="safeKey=${entry.key.replaceAll('[^A-Za-z0-9]', '_')}"
+         th:id="'accordion_' + ${safeKey}">
+
+      <!-- FAQ 항목 -->
+      <div th:each="faq, stat : ${entry.value}" class="accordion-item">
+
+        <!-- Header -->
+        <h2 class="accordion-header"
+            th:id="'heading_' + ${safeKey} + '_' + ${stat.index}">
+          <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse"
+                  th:data-bs-target="'#collapse_' + ${safeKey} + '_' + ${stat.index}"
+                  aria-expanded="false"
+                  th:aria-controls="'collapse_' + ${safeKey} + '_' + ${stat.index}">
+            <span th:text="${faq.question}"></span>
+          </button>
+        </h2>
+
+        <!-- Collapse -->
+        <div th:id="'collapse_' + ${safeKey} + '_' + ${stat.index}"
+             class="accordion-collapse collapse"
+             th:aria-labelledby="'heading_' + ${safeKey} + '_' + ${stat.index}"
+             th:data-bs-parent="'#accordion_' + ${safeKey}">
+          <div class="accordion-body" th:text="${faq.answer}"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:replace="~{include/footer :: footer}"></div>
+</body>
+</html>

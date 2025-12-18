@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>이벤트 로그</title>
+
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+
+    <style>
+        body {
+          background: #f5f6fa;
+          font-family: 'Pretendard', sans-serif;
+          padding: 40px;
+        }
+
+        /* ===== META BOX ===== */
+        .meta-box {
+          margin-bottom: 20px;
+          padding: 16px 20px;
+          background: #fff;
+          border-radius: 10px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .meta-box h2 {
+          margin: 0 0 10px 0;
+          font-size: 20px;
+        }
+
+        .meta-row {
+          display: flex;
+          gap: 24px;
+          margin-bottom: 8px;
+          font-size: 14px;
+        }
+
+        .btn-download {
+          margin-top: 12px;
+          padding: 8px 16px;
+          background: #3498db;
+          color: white;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+          font-size: 13px;
+        }
+
+        /* ===== TABLE ===== */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          table-layout: fixed;
+          border-radius: 10px;
+          overflow: hidden;
+        }
+
+        thead th {
+          background: #f0f2f5;
+          padding: 10px 12px;
+          font-size: 14px;
+          font-weight: 600;
+          border-bottom: 2px solid #d0d5dd;
+          text-align: center;
+        }
+
+        tbody td {
+          padding: 10px 12px;
+          font-size: 14px;
+          border-bottom: 1px solid #e5e8eb;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        tbody tr:nth-child(even) {
+          background: #fafbfc;
+        }
+
+        tbody tr:hover {
+          background: #eef5ff;
+        }
+
+        /* ===== COLUMN ALIGN ===== */
+        .col-no {
+          width: 50px;
+          text-align: center;
+        }
+
+        .col-start,
+        .col-end {
+          width: 180px;
+          text-align: left;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .col-level {
+          width: 90px;
+          text-align: center;
+        }
+
+        .col-msg {
+          width: 160px;          /* ⭐ 핵심 */
+          text-align: left;
+        }
+
+        .col-raw {
+          width: 120px;
+          text-align: right;
+          font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== LEVEL BADGE ===== */
+        .level-badge {
+          display: inline-block;
+          min-width: 48px;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .level-low {
+          background: #fdecea;
+          color: #c0392b;
+        }
+
+        .level-high {
+          background: #e8f4fd;
+          color: #2471a3;
+        }
+
+        /* ===== OPEN EVENT ===== */
+        .col-end.is-open {
+          color: #e74c3c;
+          font-weight: 600;
+        }
+
+        .empty-row {
+          text-align: center;
+          padding: 20px;
+          color: #888;
+        }
+
+        .log-table-wrap {
+          max-width: 1200px;   /* ⭐ 핵심 */
+          margin: 0 auto;      /* 가운데 정렬 */
+        }
+    </style>
+
+    <script th:inline="javascript">
+        window.ctx = /*[[@{/}]]*/ "/";
+    </script>
+</head>
+
+<body>
+
+<!-- ===== META ===== -->
+<div class="meta-box">
+    <h2>이벤트 로그</h2>
+
+    <div class="meta-row">
+        <div><b>Device:</b> <span id="metaDevice"></span></div>
+        <div><b>Sensor:</b> <span id="metaSensor"></span></div>
+        <div><b>기간:</b> <span id="metaPeriod"></span></div>
+    </div>
+
+    <button class="btn-download" onclick="downloadExcel()">엑셀 다운로드</button>
+</div>
+
+<!-- ===== TABLE ===== -->
+<div class="log-table-wrap">
+    <table>
+        <thead>
+        <tr>
+            <th class="col-no">#</th>
+            <th class="col-start">시작</th>
+            <th class="col-end">종료</th>
+            <th class="col-level">레벨</th>
+            <th class="col-msg">메시지</th>
+            <th class="col-raw">raw_id</th>
+        </tr>
+        </thead>
+        <tbody id="eventBody"></tbody>
+    </table>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+
+    const scope = params.get("scope");
+    const year = params.get("year");
+    const month = params.get("month");
+    const device = params.get("device");
+    const sensorType = params.get("sensorType");
+    const week = params.get("week");
+
+    document.getElementById("metaDevice").textContent = device;
+    document.getElementById("metaSensor").textContent = sensorType;
+
+    document.getElementById("metaPeriod").textContent =
+      scope === "MONTH"
+        ? `${year}년 ${month}월`
+        : `${year}년 ${month}월 ${week}주차`;
+
+    async function loadData() {
+      const q = new URLSearchParams({ scope, year, month, device, sensorType });
+      if (week) q.append("week", week);
+
+      const res = await fetch(`${ctx}api/report/events?${q}`);
+      const list = await res.json();
+
+      const tbody = document.getElementById("eventBody");
+      tbody.innerHTML = "";
+
+      if (list.length === 0) {
+        tbody.innerHTML =
+          `<tr><td colspan="6" class="empty-row">이벤트가 없습니다.</td></tr>`;
+        return;
+      }
+
+      list.forEach((ev, idx) => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td class="col-no">${idx + 1}</td>
+          <td class="col-start">${format(ev.startDatetime)}</td>
+          <td class="col-end ${ev.endDatetime ? "" : "is-open"}">
+            ${ev.endDatetime ? format(ev.endDatetime) : "진행 중"}
+          </td>
+          <td class="col-level">
+            <span class="level-badge level-${ev.eventLevel.toLowerCase()}">
+              ${ev.eventLevel}
+            </span>
+          </td>
+          <td class="col-msg">${ev.message}</td>
+          <td class="col-raw">${ev.rawId}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function format(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString("ko-KR");
+    }
+
+    function downloadExcel() {
+      const p = new URLSearchParams({ scope, year, month, device, sensorType });
+      if (week) p.append("week", week);
+      window.location.href = `${ctx}sensor/event-log/download?${p}`;
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>

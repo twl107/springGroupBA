@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 - 상품 등록</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Noto Sans KR', sans-serif;
+            color: #333;
+        }
+
+        .admin-content {
+            padding: 20px;
+        }
+
+        .shop-form-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-title h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .form-group input[type="text"],
+        .form-group select,
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group select:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-delete-img {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .btn-delete-img:hover {
+            background-color: #c82333;
+        }
+
+        .img-preview {
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            padding: 5px;
+            max-width: 200px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: #fafafa;
+            display: block;
+            min-height: 150px;
+            object-fit: contain;
+        }
+
+        .cke_chrome {
+            border-color: #ddd !important;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .btn-area {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-submit, .btn-cancel {
+            padding: 10px 35px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-submit {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-submit:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-cancel {
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #ddd;
+        }
+        .btn-cancel:hover {
+            background-color: #e2e6ea;
+            border-color: #cbd3da;
+        }
+        .input-inline {
+            display: flex;
+            gap: 10px;
+        }
+        .input-inline input {
+            width: 150px;
+            flex-grow: 0;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{admin/adminLeft :: sidebar}"></div>
+
+<main class="admin-content">
+    <div class="sub-content-container">
+        <div class="shop-form-container">
+            <form th:action="@{/admin/dbShop/dbProductInput}" method="post" enctype="multipart/form-data" onsubmit="return removeCommasBeforeSubmit()">
+
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div class="form-title">
+                    <h2>상 품 등 록</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">카테고리</label>
+                    <select name="category" id="category">
+                        <option value="ENV">환경 센서</option>
+                        <option value="TEMP">온도 센서</option>
+                        <option value="SOUND">소음 센서</option>
+                        <option value="LIGHT">조도 센서</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">제품명</label>
+                    <input type="text" name="name" id="name" placeholder="예: 환경 센서 모듈" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="modelName">모델명</label>
+                    <input type="text" name="modelName" id="modelName" placeholder="예: ST-IAQ-07" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="price">가격 (원)</label>
+                    <div class="input-inline">
+                        <input type="text" name="price" id="price" placeholder="숫자만 입력 (콤마 자동 적용)" onkeyup="inputNumberFormat(this)" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="stock">재고수량 (개)</label>
+                    <div class="input-inline">
+                        <input type="text" name="stock" id="stock" value="0" onkeyup="inputNumberFormat(this)">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="file">상품 이미지</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" name="file" id="file" accept="image/*" onchange="readURL(this);">
+                        <button type="button" class="btn-delete-img" onclick="clearImageUpload()">x 삭제</button>
+                    </div>
+                    <img id="preview" class="img-preview" src="https://placehold.co/200x200?text=No+Image" alt="이미지 미리보기" />
+                </div>
+
+                <div class="form-group">
+                    <label for="description">상세 설명</label>
+                    <textarea name="description" id="description" rows="5"></textarea>
+                </div>
+
+                <div class="btn-area">
+                    <a th:href="@{/admin/dbShop/dbProductList}" class="btn-cancel">취소</a>
+                    <button type="submit" class="btn-submit">상품 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+
+    const contextPath = /*[[@{/}]]*/ "/";
+    /*]]>*/
+
+    var csrfToken = [[${_csrf.token}]];
+
+    CKEDITOR.replace('description', {
+        height: 400,
+        filebrowserUploadUrl: contextPath + 'admin/dbShop/imageUpload?_csrf=' + csrfToken,
+        enterMode: CKEDITOR.ENTER_BR,
+        versionCheck: false
+    });
+
+    function inputNumberFormat(obj) {
+        obj.value = comma(uncomma(obj.value));
+    }
+
+    function comma(str) {
+        str = String(str);
+        return str.replace(/(\d)(?=(?:\d{3})+(?!\d))/g, '$1,');
+    }
+
+    function uncomma(str) {
+        str = String(str);
+        return str.replace(/[^\d]+/g, '');
+    }
+
+    function removeCommasBeforeSubmit() {
+        const priceInput = document.getElementById('price');
+        const stockInput = document.getElementById('stock');
+
+        if (!priceInput.value) {
+            console.error('가격을 입력해주세요.');
+            priceInput.focus();
+            return false;
+        }
+
+        priceInput.value = uncomma(priceInput.value);
+        stockInput.value = uncomma(stockInput.value);
+        return true;
+    }
+
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var preview = document.getElementById('preview');
+                preview.src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function clearImageUpload() {
+        const fileInput = document.getElementById('file');
+        const preview = document.getElementById('preview');
+
+        fileInput.value = '';
+        preview.src = 'https://placehold.co/200x200?text=No+Image';
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.admin-sidebar');
+        if(sidebar) {
+            sidebar.classList.toggle('active');
+        }
+    }
+</script>
+</body>
+</html>
