@@ -30,8 +30,8 @@ Green Soft는 실시간 데이터 모니터링이라는 기술적 가치와 제�
 </div>
 
 ### 🟢 Green Soft (Team Project)
-* **비즈니스 로직:** [Controller 바로가기](https://github.com/twl107/springGroupBA/src/main/java/com/example/springGroupBA/controller) | [Service 바로가기](https://github.com/twl107/springGroupBA/src/main/java/com/example/springGroupBA/service)
-* **데이터 연동(JPA):** [Entity/Repository 바로가기](https://github.com/twl107/springGroupBA/src/main/java/com/example/springGroupBA/repository)
+* **비즈니스 로직:** [Controller 바로가기](https://github.com/twl107/springGroupBA/tree/main/src/main/java/com/example/springGroupBA/controller) | [Service 바로가기](https://github.com/twl107/springGroupBA/tree/main/src/main/java/com/example/springGroupBA/service)
+* **데이터 연동(JPA):** [Entity/Repository 바로가기](https://github.com/twl107/springGroupBA/tree/main/src/main/java/com/example/springGroupBA/repository)
 
 ---
 
